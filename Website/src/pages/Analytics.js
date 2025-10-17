@@ -1,145 +1,379 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import apiService from '../services/api';
 
 function Analytics() {
-  const currentDate = new Date().toLocaleDateString('en-US', { 
-    weekday: 'long', 
-    day: 'numeric', 
-    month: 'long', 
-    year: 'numeric' 
-  });
+  const [analytics, setAnalytics] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('overview');
 
-  const mountains = [
-    { id: 1, name: 'Mt. Batulao', views: 3, clicks: 1 },
-    { id: 2, name: 'Mt. Batulao', views: 3, clicks: 1 },
-    { id: 3, name: 'Mt. Batulao', views: 3, clicks: 1 },
-  ];
+  useEffect(() => {
+    fetchAnalytics();
+  }, []);
 
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const fetchAnalytics = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const [dashboardRes, mountainRes, articleRes, userRes] = await Promise.allSettled([
+        apiService.getDashboardAnalytics(),
+        apiService.getMountainAnalytics(),
+        apiService.getArticleAnalytics(),
+        apiService.getUserAnalytics()
+      ]);
+
+      const safeValue = (res, fallback = null) => (res.status === 'fulfilled' ? res.value : fallback);
+
+      setAnalytics({
+        dashboard: safeValue(dashboardRes, { totals: {}, recentActivity: {}, statistics: {} }),
+        mountains: safeValue(mountainRes, { overview: {}, difficultyDistribution: [], topLocations: [] }),
+        articles: safeValue(articleRes, { overview: {}, categoryDistribution: [], topAuthors: [] }),
+        users: safeValue(userRes, { overview: {}, recentUsers: [] })
+      });
+    } catch (err) {
+      console.error('Failed to fetch analytics:', err);
+      setError('Failed to load analytics data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-8">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <div className="flex items-center">
+            <div className="text-red-400 mr-3">⚠️</div>
+            <div>
+              <h3 className="text-red-800 font-semibold">Error Loading Analytics</h3>
+              <p className="text-red-600 mt-1">{error}</p>
+              <button 
+                onClick={fetchAnalytics}
+                className="mt-3 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-center">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Analytics</h1>
-          <p className="text-primary font-medium">{currentDate}</p>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-3">Analytics</h1>
+          <p className="text-orange-600 font-semibold text-lg">Data insights and statistics</p>
         </div>
+        <button 
+          onClick={fetchAnalytics}
+          className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+        >
+          Refresh Data
+        </button>
       </div>
 
-      <div>
-        <h2 className="text-2xl font-semibold text-gray-800 mb-6">Overview</h2>
-
-        <div className="flex gap-3 mb-6">
-          {['Last 7 days', 'Last 30 days', 'Month', 'Year', 'All time'].map((filter, index) => (
-            <button 
-              key={filter}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-                filter === 'Year' 
-                  ? 'bg-gradient-to-r from-primary to-primary-dark text-white shadow-md' 
-                  : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+      {/* Tabs */}
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          {[
+            { id: 'overview', label: 'Overview', icon: '📊' },
+            { id: 'mountains', label: 'Mountains', icon: '⛰️' },
+            { id: 'articles', label: 'Articles', icon: '📖' },
+            { id: 'users', label: 'Users', icon: '👥' }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
+                activeTab === tab.id
+                  ? 'border-orange-500 text-orange-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              {filter}
+              <span>{tab.icon}</span>
+              {tab.label}
             </button>
           ))}
-        </div>
-
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-          <svg viewBox="0 0 1000 300" className="w-full h-64">
-            <defs>
-              <linearGradient id="gradient1" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#f5c842" stopOpacity="0.8"/>
-                <stop offset="100%" stopColor="#f5c842" stopOpacity="0.1"/>
-              </linearGradient>
-              <linearGradient id="gradient2" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#d2691e" stopOpacity="0.8"/>
-                <stop offset="100%" stopColor="#d2691e" stopOpacity="0.1"/>
-              </linearGradient>
-            </defs>
-            
-            {/* Yellow wave */}
-            <path 
-              d="M0,100 Q100,80 200,90 T400,85 T600,95 T800,90 T1000,100 L1000,300 L0,300 Z" 
-              fill="url(#gradient1)" 
-            />
-            
-            {/* Orange wave */}
-            <path 
-              d="M0,150 Q100,130 200,140 T400,135 T600,145 T800,140 T1000,150 L1000,300 L0,300 Z" 
-              fill="url(#gradient2)" 
-            />
-            
-            {/* Month labels */}
-            {months.map((month, index) => (
-              <text 
-                key={month} 
-                x={50 + index * 80} 
-                y="290" 
-                fontSize="14" 
-                fill="#666" 
-                textAnchor="middle"
-              >
-                {month}
-              </text>
-            ))}
-          </svg>
-
-          <div className="text-center mt-4 text-gray-600 font-medium">← 2025</div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-          <div className="bg-white rounded-xl shadow-lg p-6 text-center border border-gray-100 hover:border-primary/30 transition-all">
-            <div className="text-sm text-gray-600 font-medium mb-2">Visitors</div>
-            <div className="text-5xl font-bold bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">
-              101
-            </div>
-            <div className="text-green-500 font-semibold mt-2">↑</div>
-          </div>
-          <div className="bg-white rounded-xl shadow-lg p-6 text-center border border-gray-100 hover:border-accent/30 transition-all">
-            <div className="text-sm text-gray-600 font-medium mb-2">Article Clicks</div>
-            <div className="text-5xl font-bold bg-gradient-to-r from-accent to-yellow-600 bg-clip-text text-transparent">
-              2
-            </div>
-          </div>
-          <div className="bg-white rounded-xl shadow-lg p-6 text-center border border-gray-100 hover:border-secondary/30 transition-all">
-            <div className="text-sm text-gray-600 font-medium mb-2">Guide Clicks</div>
-            <div className="text-5xl font-bold bg-gradient-to-r from-secondary to-green-600 bg-clip-text text-transparent">
-              0
-            </div>
-          </div>
-        </div>
+        </nav>
       </div>
 
-      <div>
-        <h2 className="text-2xl font-semibold text-gray-800 mb-6">Mountains</h2>
-        
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Image</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Mountain</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Views</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Clicks</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {mountains.map((mountain) => (
-                <tr key={mountain.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg flex flex-col items-center justify-center">
-                      <div className="text-xl">☁️</div>
-                      <div className="text-xl">⛰️</div>
+      {/* Overview Tab */}
+      {activeTab === 'overview' && analytics?.dashboard && (
+        <div className="space-y-8">
+          {/* Key Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Mountains</p>
+                  <p className="text-3xl font-bold text-gray-900">{analytics.dashboard.totals?.mountains || 0}</p>
+                </div>
+                <div className="text-3xl opacity-40">⛰️</div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Published Articles</p>
+                  <p className="text-3xl font-bold text-gray-900">{analytics.dashboard.totals?.articles || 0}</p>
+                </div>
+                <div className="text-3xl opacity-40">📖</div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Draft Articles</p>
+                  <p className="text-3xl font-bold text-gray-900">{analytics.dashboard.totals?.drafts || 0}</p>
+                </div>
+                <div className="text-3xl opacity-40">📝</div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Users</p>
+                  <p className="text-3xl font-bold text-gray-900">{analytics.dashboard.totals?.users || 0}</p>
+                </div>
+                <div className="text-3xl opacity-40">👥</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Charts Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Difficulty Distribution */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Mountain Difficulty Distribution</h3>
+              <div className="space-y-3">
+                {analytics.dashboard.statistics?.difficultyDistribution?.map((item, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">{item.difficulty}</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-32 bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-orange-500 h-2 rounded-full" 
+                          style={{ width: `${(item.count / Math.max(...analytics.dashboard.statistics.difficultyDistribution.map(d => d.count))) * 100}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm font-medium text-gray-900 w-8">{item.count}</span>
                     </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900 font-medium">{mountain.name}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{mountain.views}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{mountain.clicks}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Category Distribution */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Article Category Distribution</h3>
+              <div className="space-y-3">
+                {analytics.dashboard.statistics?.categoryDistribution?.map((item, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">{item.category}</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-32 bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-green-500 h-2 rounded-full" 
+                          style={{ width: `${(item.count / Math.max(...analytics.dashboard.statistics.categoryDistribution.map(c => c.count))) * 100}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm font-medium text-gray-900 w-8">{item.count}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Mountains Tab */}
+      {activeTab === 'mountains' && analytics?.mountains && (
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Mountains</p>
+                  <p className="text-3xl font-bold text-gray-900">{analytics.mountains.overview?.total_mountains || 0}</p>
+                </div>
+                <div className="text-3xl opacity-40">⛰️</div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Average Elevation</p>
+                  <p className="text-3xl font-bold text-gray-900">{Math.round(analytics.mountains.overview?.avg_elevation || 0)}m</p>
+                </div>
+                <div className="text-3xl opacity-40">📏</div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Highest Peak</p>
+                  <p className="text-3xl font-bold text-gray-900">{analytics.mountains.overview?.max_elevation || 0}m</p>
+                </div>
+                <div className="text-3xl opacity-40">🔝</div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Lowest Peak</p>
+                  <p className="text-3xl font-bold text-gray-900">{analytics.mountains.overview?.min_elevation || 0}m</p>
+                </div>
+                <div className="text-3xl opacity-40">🔻</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Top Locations */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Locations</h3>
+            <div className="space-y-3">
+              {analytics.mountains.topLocations?.slice(0, 10).map((location, index) => (
+                <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
+                  <span className="text-sm font-medium text-gray-700">{location.location}</span>
+                  <span className="text-sm font-medium text-gray-900">{location.count} mountains</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Articles Tab */}
+      {activeTab === 'articles' && analytics?.articles && (
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Articles</p>
+                  <p className="text-3xl font-bold text-gray-900">{analytics.articles.overview?.total_articles || 0}</p>
+                </div>
+                <div className="text-3xl opacity-40">📖</div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Published</p>
+                  <p className="text-3xl font-bold text-gray-900">{analytics.articles.overview?.published_articles || 0}</p>
+                </div>
+                <div className="text-3xl opacity-40">✅</div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Drafts</p>
+                  <p className="text-3xl font-bold text-gray-900">{analytics.articles.overview?.draft_articles || 0}</p>
+                </div>
+                <div className="text-3xl opacity-40">📝</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Top Authors */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Authors</h3>
+            <div className="space-y-3">
+              {analytics.articles.topAuthors?.slice(0, 10).map((author, index) => (
+                <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
+                  <span className="text-sm font-medium text-gray-700">{author.author}</span>
+                  <span className="text-sm font-medium text-gray-900">{author.count} articles</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Users Tab */}
+      {activeTab === 'users' && analytics?.users && (
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Users</p>
+                  <p className="text-3xl font-bold text-gray-900">{analytics.users.overview?.total_users || 0}</p>
+                </div>
+                <div className="text-3xl opacity-40">👥</div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Admin Users</p>
+                  <p className="text-3xl font-bold text-gray-900">{analytics.users.overview?.admin_users || 0}</p>
+                </div>
+                <div className="text-3xl opacity-40">👑</div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Regular Users</p>
+                  <p className="text-3xl font-bold text-gray-900">{analytics.users.overview?.regular_users || 0}</p>
+                </div>
+                <div className="text-3xl opacity-40">👤</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Recent Users */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Users</h3>
+            <div className="space-y-3">
+              {analytics.users.recentUsers?.slice(0, 10).map((user, index) => (
+                <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
+                  <div>
+                    <span className="text-sm font-medium text-gray-700">{user.username}</span>
+                    <span className="text-xs text-gray-500 ml-2">({user.email})</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                    }`}>
+                      {user.role}
+                    </span>
+                    <span className="text-xs text-gray-500">{new Date(user.created_at).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,13 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import apiService from '../services/api';
 
 function Dashboard() {
+  const navigate = useNavigate();
+  const [analytics, setAnalytics] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const currentDate = new Date().toLocaleDateString('en-US', { 
     weekday: 'long', 
     day: 'numeric', 
@@ -8,44 +15,216 @@ function Dashboard() {
     year: 'numeric' 
   });
 
+  useEffect(() => {
+    fetchAnalytics();
+  }, []);
+
+  const fetchAnalytics = async () => {
+    try {
+      setLoading(true);
+      const data = await apiService.getDashboardAnalytics();
+      setAnalytics(data);
+    } catch (err) {
+      console.error('Failed to fetch analytics:', err);
+      setError('Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-10">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+          <div>
+            <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-3">Dashboard</h1>
+            <p className="text-orange-600 font-semibold text-lg flex items-center gap-2">
+              <span>📅</span>
+              {currentDate}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-10">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+          <div>
+            <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-3">Dashboard</h1>
+            <p className="text-orange-600 font-semibold text-lg flex items-center gap-2">
+              <span>📅</span>
+              {currentDate}
+            </p>
+          </div>
+        </div>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <div className="flex items-center">
+            <div className="text-red-400 mr-3">⚠️</div>
+            <div>
+              <h3 className="text-red-800 font-semibold">Error Loading Dashboard</h3>
+              <p className="text-red-600 mt-1">{error}</p>
+              <button 
+                onClick={fetchAnalytics}
+                className="mt-3 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center">
+    <div className="space-y-10">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Dashboard</h1>
-          <p className="text-primary font-medium">{currentDate}</p>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-3">Dashboard</h1>
+          <p className="text-orange-600 font-semibold text-lg flex items-center gap-2">
+            <span>📅</span>
+            {currentDate}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <button 
+            onClick={() => navigate('/')}
+            className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:shadow-lg transition-all flex items-center gap-2"
+          >
+            <span>🌐</span>
+            View Public Site
+          </button>
+          <button 
+            onClick={fetchAnalytics}
+            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+          >
+            Refresh Data
+          </button>
         </div>
       </div>
 
+      {/* Overview Stats */}
       <div>
-        <h2 className="text-2xl font-semibold text-gray-800 mb-6">Overview</h2>
+        <div className="mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Overview</h2>
+          <p className="text-gray-500">Quick glance at your content statistics</p>
+        </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-8 text-center border border-gray-100 hover:border-primary/30 transform hover:-translate-y-1">
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">Total Mountains</h3>
-            <div className="text-6xl font-bold bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent my-6">
-              0
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Total Mountains Card */}
+          <div className="group bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-8 border border-gray-200 hover:border-orange-500">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Total Mountains</h3>
+              <div className="text-3xl opacity-40">⛰️</div>
             </div>
-            <div className="text-6xl">⛰️</div>
+            <div className="text-5xl font-bold text-gray-900 mb-2">
+              {analytics?.totals?.mountains || 0}
+            </div>
+            <p className="text-sm text-gray-500">Mountains listed</p>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-8 text-center border border-gray-100 hover:border-secondary/30 transform hover:-translate-y-1">
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">Articles</h3>
-            <div className="text-6xl font-bold bg-gradient-to-r from-secondary to-green-600 bg-clip-text text-transparent my-6">
-              0
+          {/* Articles Card */}
+          <div className="group bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-8 border border-gray-200 hover:border-orange-500">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Articles</h3>
+              <div className="text-3xl opacity-40">📖</div>
             </div>
-            <div className="text-6xl">📖</div>
+            <div className="text-5xl font-bold text-gray-900 mb-2">
+              {analytics?.totals?.articles || 0}
+            </div>
+            <p className="text-sm text-gray-500">Articles published</p>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-8 text-center border border-gray-100 hover:border-accent/30 transform hover:-translate-y-1">
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">Guides</h3>
-            <div className="text-6xl font-bold bg-gradient-to-r from-accent to-yellow-600 bg-clip-text text-transparent my-6">
-              0
+          {/* Drafts Card */}
+          <div className="group bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-8 border border-gray-200 hover:border-orange-500">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Drafts</h3>
+              <div className="text-3xl opacity-40">📝</div>
             </div>
-            <div className="text-6xl">📋</div>
+            <div className="text-5xl font-bold text-gray-900 mb-2">
+              {analytics?.totals?.drafts || 0}
+            </div>
+            <p className="text-sm text-gray-500">Draft articles</p>
+          </div>
+
+          {/* Users Card */}
+          <div className="group bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-8 border border-gray-200 hover:border-orange-500">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Users</h3>
+              <div className="text-3xl opacity-40">👥</div>
+            </div>
+            <div className="text-5xl font-bold text-gray-900 mb-2">
+              {analytics?.totals?.users || 0}
+            </div>
+            <p className="text-sm text-gray-500">Registered users</p>
           </div>
         </div>
       </div>
+
+      {/* Recent Activity */}
+      {analytics?.recentActivity && (
+        <div>
+          <div className="mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Recent Activity</h2>
+            <p className="text-gray-500">Latest updates and changes</p>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Recent Mountains */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Mountains</h3>
+              <div className="space-y-3">
+                {analytics.recentActivity.mountains?.slice(0, 5).map((mountain, index) => (
+                  <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
+                    <div>
+                      <p className="font-medium text-gray-900">{mountain.name}</p>
+                      <p className="text-sm text-gray-500">{new Date(mountain.created_at).toLocaleDateString()}</p>
+                    </div>
+                    <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
+                      {mountain.difficulty}
+                    </span>
+                  </div>
+                ))}
+                {(!analytics.recentActivity.mountains || analytics.recentActivity.mountains.length === 0) && (
+                  <p className="text-gray-500 text-center py-4">No recent mountains</p>
+                )}
+              </div>
+            </div>
+
+            {/* Recent Articles */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Articles</h3>
+              <div className="space-y-3">
+                {analytics.recentActivity.articles?.slice(0, 5).map((article, index) => (
+                  <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
+                    <div>
+                      <p className="font-medium text-gray-900">{article.title}</p>
+                      <p className="text-sm text-gray-500">by {article.author} • {new Date(article.created_at).toLocaleDateString()}</p>
+                    </div>
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      article.status === 'published' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {article.status}
+                    </span>
+                  </div>
+                ))}
+                {(!analytics.recentActivity.articles || analytics.recentActivity.articles.length === 0) && (
+                  <p className="text-gray-500 text-center py-4">No recent articles</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
