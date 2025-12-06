@@ -124,6 +124,12 @@ DROP POLICY IF EXISTS "Users can update their own data" ON users;
 CREATE POLICY "Users can update their own data" ON users
     FOR UPDATE USING (auth.uid()::text = id::text);
 
+-- Allow public user registration (INSERT)
+-- This is safe because the backend validates all input and hashes passwords
+DROP POLICY IF EXISTS "Allow public user registration" ON users;
+CREATE POLICY "Allow public user registration" ON users
+    FOR INSERT WITH CHECK (true);
+
 -- RLS Policies for mountains table (public read, admin write)
 DROP POLICY IF EXISTS "Mountains are viewable by everyone" ON mountains;
 CREATE POLICY "Mountains are viewable by everyone" ON mountains

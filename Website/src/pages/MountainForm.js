@@ -13,7 +13,12 @@ function MountainForm() {
     elevation: '',
     location: '',
     difficulty: 'Easy',
-    status: 'Single'
+    status: 'Single',
+    trip_duration: 1,
+    base_price_per_head: 1599.00,
+    joiner_capacity: 14,
+    is_joiner_available: true,
+    is_exclusive_available: true
   });
   const [images, setImages] = useState([null, null, null, null, null]);
   const [thingsToBring, setThingsToBring] = useState(['']);
@@ -47,7 +52,12 @@ function MountainForm() {
           elevation: mountain.elevation || '',
           location: mountain.location || '',
           difficulty: mountain.difficulty || 'Easy',
-          status: mountain.status || 'Single'
+          status: mountain.status || 'Single',
+          trip_duration: mountain.trip_duration || 1,
+          base_price_per_head: mountain.base_price_per_head || 1599.00,
+          joiner_capacity: mountain.joiner_capacity || 14,
+          is_joiner_available: mountain.is_joiner_available !== undefined ? mountain.is_joiner_available : true,
+          is_exclusive_available: mountain.is_exclusive_available !== undefined ? mountain.is_exclusive_available : true
         });
         
         // Load existing images if available
@@ -291,6 +301,11 @@ function MountainForm() {
         elevation: parseInt(formData.elevation),
         location: formData.location,
         difficulty: formData.difficulty,
+        trip_duration: parseInt(formData.trip_duration) || 1,
+        base_price_per_head: parseFloat(formData.base_price_per_head) || 1599.00,
+        joiner_capacity: parseInt(formData.joiner_capacity) || 14,
+        is_joiner_available: formData.is_joiner_available,
+        is_exclusive_available: formData.is_exclusive_available,
         image_url: images[0] || null, // Send the first image as the main image
         additional_images: additionalImages, // Send additional images as array (always an array, even if empty)
         ...mountainDetails // Include all details in the same request
@@ -497,74 +512,203 @@ function MountainForm() {
           </div>
         </div>
 
-        <input 
-          type="text" 
-          placeholder="Mountain Name *" 
-          value={formData.name}
-          onChange={(e) => handleInputChange('name', e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-        />
+        <div>
+          <label htmlFor="mountain-name" className="block text-sm font-medium text-gray-700 mb-2">
+            Mountain Name <span className="text-red-500">*</span>
+          </label>
+          <input 
+            id="mountain-name"
+            type="text" 
+            placeholder="Mountain Name *" 
+            value={formData.name}
+            onChange={(e) => handleInputChange('name', e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+          />
+        </div>
         
-        <textarea 
-          placeholder="Description"
-          value={formData.description}
-          onChange={(e) => handleInputChange('description', e.target.value)} 
-          rows="4"
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all resize-none"
-        ></textarea>
+        <div>
+          <label htmlFor="mountain-description" className="block text-sm font-medium text-gray-700 mb-2">
+            Description
+          </label>
+          <textarea 
+            id="mountain-description"
+            placeholder="Description"
+            value={formData.description}
+            onChange={(e) => handleInputChange('description', e.target.value)} 
+            rows="4"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all resize-none"
+          ></textarea>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label htmlFor="mountain-elevation" className="block text-sm font-medium text-gray-700 mb-2">
+              Elevation (meters) <span className="text-red-500">*</span>
+            </label>
+            <input 
+              id="mountain-elevation"
+              type="number" 
+              placeholder="Elevation (meters) *" 
+              value={formData.elevation}
+              onChange={(e) => handleInputChange('elevation', e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+            />
+          </div>
+          <div>
+            <label htmlFor="mountain-location" className="block text-sm font-medium text-gray-700 mb-2">
+              Location <span className="text-red-500">*</span>
+            </label>
+            <input 
+              id="mountain-location"
+              type="text" 
+              placeholder="Location *" 
+              value={formData.location}
+              onChange={(e) => handleInputChange('location', e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+            />
+          </div>
+          <div>
+            <label htmlFor="mountain-difficulty" className="block text-sm font-medium text-gray-700 mb-2">
+              Difficulty
+            </label>
+            <select 
+              id="mountain-difficulty"
+              value={formData.difficulty}
+              onChange={(e) => handleInputChange('difficulty', e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+            >
+              <option value="Easy">Easy</option>
+              <option value="Medium">Medium</option>
+              <option value="Hard">Hard</option>
+              <option value="Expert">Expert</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="mountain-status" className="block text-sm font-medium text-gray-700 mb-2">
+              Status
+            </label>
+            <select 
+              id="mountain-status"
+              value={formData.status}
+              onChange={(e) => handleInputChange('status', e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+            >
+              <option value="Single">Single</option>
+              <option value="Multiple">Multiple</option>
+              <option value="Closed">Closed</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Trip Duration */}
+        <div>
+          <label htmlFor="mountain-trip-duration" className="block text-sm font-medium text-gray-700 mb-2">
+            Trip Duration (days) <span className="text-red-500">*</span>
+          </label>
           <input 
+            id="mountain-trip-duration"
             type="number" 
-            placeholder="Elevation (meters) *" 
-            value={formData.elevation}
-            onChange={(e) => handleInputChange('elevation', e.target.value)}
-            className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+            min="1"
+            max="30"
+            placeholder="Trip Duration (days)" 
+            value={formData.trip_duration}
+            onChange={(e) => handleInputChange('trip_duration', parseInt(e.target.value) || 1)}
+            className="w-full max-w-xs px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
           />
-          <input 
-            type="text" 
-            placeholder="Location *" 
-            value={formData.location}
-            onChange={(e) => handleInputChange('location', e.target.value)}
-            className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-          />
-          <select 
-            value={formData.difficulty}
-            onChange={(e) => handleInputChange('difficulty', e.target.value)}
-            className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-          >
-            <option value="Easy">Easy</option>
-            <option value="Medium">Medium</option>
-            <option value="Hard">Hard</option>
-            <option value="Expert">Expert</option>
-          </select>
-          <select 
-            value={formData.status}
-            onChange={(e) => handleInputChange('status', e.target.value)}
-            className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-          >
-            <option value="Single">Single</option>
-            <option value="Multiple">Multiple</option>
-            <option value="Closed">Closed</option>
-          </select>
+          <p className="text-xs text-gray-500 mt-1">
+            Number of days for the trip. End date will be automatically calculated as Start Date + Trip Duration.
+          </p>
+        </div>
+
+        {/* Pricing Section */}
+        <div className="space-y-4 pt-6 border-t">
+          <h3 className="text-lg font-semibold text-gray-700">Pricing & Availability</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="base-price-per-head" className="block text-sm font-medium text-gray-700 mb-2">
+                Base Price Per Head (₱) <span className="text-red-500">*</span>
+              </label>
+              <input 
+                id="base-price-per-head"
+                type="number" 
+                step="0.01"
+                min="0"
+                placeholder="1599.00" 
+                value={formData.base_price_per_head}
+                onChange={(e) => handleInputChange('base_price_per_head', parseFloat(e.target.value) || 0)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Base price for 1 day, 1 pax (in PHP)
+              </p>
+            </div>
+            <div>
+              <label htmlFor="joiner-capacity" className="block text-sm font-medium text-gray-700 mb-2">
+                Joiner Capacity (pax) <span className="text-red-500">*</span>
+              </label>
+              <input 
+                id="joiner-capacity"
+                type="number" 
+                min="1"
+                placeholder="14" 
+                value={formData.joiner_capacity}
+                onChange={(e) => handleInputChange('joiner_capacity', parseInt(e.target.value) || 14)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Maximum number of participants for joiner hikes
+              </p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center">
+              <input 
+                id="is-joiner-available"
+                type="checkbox" 
+                checked={formData.is_joiner_available}
+                onChange={(e) => handleInputChange('is_joiner_available', e.target.checked)}
+                className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+              />
+              <label htmlFor="is-joiner-available" className="ml-2 text-sm font-medium text-gray-700">
+                Joiner hikes available
+              </label>
+            </div>
+            <div className="flex items-center">
+              <input 
+                id="is-exclusive-available"
+                type="checkbox" 
+                checked={formData.is_exclusive_available}
+                onChange={(e) => handleInputChange('is_exclusive_available', e.target.checked)}
+                className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+              />
+              <label htmlFor="is-exclusive-available" className="ml-2 text-sm font-medium text-gray-700">
+                Exclusive hikes available
+              </label>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-700">Things to Bring</h3>
             {thingsToBring.map((item, index) => (
-              <input 
-                key={index}
-                type="text" 
-                placeholder="Item" 
-                value={item}
-                onChange={(e) => {
-                  const newItems = [...thingsToBring];
-                  newItems[index] = e.target.value;
-                  setThingsToBring(newItems);
-                }}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-              />
+              <div key={index}>
+                <label htmlFor={`thing-to-bring-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+                  Item {index + 1}
+                </label>
+                <input 
+                  id={`thing-to-bring-${index}`}
+                  type="text" 
+                  placeholder="Item" 
+                  value={item}
+                  onChange={(e) => {
+                    const newItems = [...thingsToBring];
+                    newItems[index] = e.target.value;
+                    setThingsToBring(newItems);
+                  }}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                />
+              </div>
             ))}
             <button 
               onClick={addThingToBring}
@@ -576,27 +720,45 @@ function MountainForm() {
 
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-700">Fees</h3>
-            <input 
-              type="number" 
-              placeholder="Environmental Fee" 
-              value={fees.environmentalFee}
-              onChange={(e) => handleFeeChange('environmentalFee', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-            />
-            <input 
-              type="number" 
-              placeholder="Registration Fee" 
-              value={fees.registrationFee}
-              onChange={(e) => handleFeeChange('registrationFee', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-            />
-            <input 
-              type="number" 
-              placeholder="Guide/Camping Fee" 
-              value={fees.guideCampingFee}
-              onChange={(e) => handleFeeChange('guideCampingFee', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-            />
+            <div>
+              <label htmlFor="environmental-fee" className="block text-sm font-medium text-gray-700 mb-2">
+                Environmental Fee
+              </label>
+              <input 
+                id="environmental-fee"
+                type="number" 
+                placeholder="Environmental Fee" 
+                value={fees.environmentalFee}
+                onChange={(e) => handleFeeChange('environmentalFee', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+              />
+            </div>
+            <div>
+              <label htmlFor="registration-fee" className="block text-sm font-medium text-gray-700 mb-2">
+                Registration Fee
+              </label>
+              <input 
+                id="registration-fee"
+                type="number" 
+                placeholder="Registration Fee" 
+                value={fees.registrationFee}
+                onChange={(e) => handleFeeChange('registrationFee', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+              />
+            </div>
+            <div>
+              <label htmlFor="guide-camping-fee" className="block text-sm font-medium text-gray-700 mb-2">
+                Guide/Camping Fee
+              </label>
+              <input 
+                id="guide-camping-fee"
+                type="number" 
+                placeholder="Guide/Camping Fee" 
+                value={fees.guideCampingFee}
+                onChange={(e) => handleFeeChange('guideCampingFee', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+              />
+            </div>
           </div>
         </div>
 
@@ -604,51 +766,75 @@ function MountainForm() {
           <h2 className="text-2xl font-bold text-gray-800 uppercase tracking-wide">Hike Itinerary</h2>
           {hikeItinerary.map((item, index) => (
             <div key={index} className="space-y-3 p-6 bg-gray-50 rounded-lg">
-              <input 
-                type="text" 
-                placeholder="Title" 
-                value={item.title}
-                onChange={(e) => {
-                  const newItinerary = [...hikeItinerary];
-                  newItinerary[index].title = e.target.value;
-                  setHikeItinerary(newItinerary);
-                }}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all bg-white"
-              />
+              <div>
+                <label htmlFor={`itinerary-title-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+                  Title
+                </label>
+                <input 
+                  id={`itinerary-title-${index}`}
+                  type="text" 
+                  placeholder="Title" 
+                  value={item.title}
+                  onChange={(e) => {
+                    const newItinerary = [...hikeItinerary];
+                    newItinerary[index].title = e.target.value;
+                    setHikeItinerary(newItinerary);
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all bg-white"
+                />
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <input 
-                  type="text" 
-                  placeholder="Description" 
-                  value={item.description}
-                  onChange={(e) => {
-                    const newItinerary = [...hikeItinerary];
-                    newItinerary[index].description = e.target.value;
-                    setHikeItinerary(newItinerary);
-                  }}
-                  className="md:col-span-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all bg-white"
-                />
-                <input 
-                  type="text" 
-                  placeholder="Location" 
-                  value={item.location}
-                  onChange={(e) => {
-                    const newItinerary = [...hikeItinerary];
-                    newItinerary[index].location = e.target.value;
-                    setHikeItinerary(newItinerary);
-                  }}
-                  className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all bg-white"
-                />
-                <input 
-                  type="text" 
-                  placeholder="Time" 
-                  value={item.time}
-                  onChange={(e) => {
-                    const newItinerary = [...hikeItinerary];
-                    newItinerary[index].time = e.target.value;
-                    setHikeItinerary(newItinerary);
-                  }}
-                  className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all bg-white"
-                />
+                <div>
+                  <label htmlFor={`itinerary-description-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+                    Description
+                  </label>
+                  <input 
+                    id={`itinerary-description-${index}`}
+                    type="text" 
+                    placeholder="Description" 
+                    value={item.description}
+                    onChange={(e) => {
+                      const newItinerary = [...hikeItinerary];
+                      newItinerary[index].description = e.target.value;
+                      setHikeItinerary(newItinerary);
+                    }}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all bg-white"
+                  />
+                </div>
+                <div>
+                  <label htmlFor={`itinerary-location-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+                    Location
+                  </label>
+                  <input 
+                    id={`itinerary-location-${index}`}
+                    type="text" 
+                    placeholder="Location" 
+                    value={item.location}
+                    onChange={(e) => {
+                      const newItinerary = [...hikeItinerary];
+                      newItinerary[index].location = e.target.value;
+                      setHikeItinerary(newItinerary);
+                    }}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all bg-white"
+                  />
+                </div>
+                <div>
+                  <label htmlFor={`itinerary-time-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+                    Time
+                  </label>
+                  <input 
+                    id={`itinerary-time-${index}`}
+                    type="text" 
+                    placeholder="Time" 
+                    value={item.time}
+                    onChange={(e) => {
+                      const newItinerary = [...hikeItinerary];
+                      newItinerary[index].time = e.target.value;
+                      setHikeItinerary(newItinerary);
+                    }}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all bg-white"
+                  />
+                </div>
               </div>
             </div>
           ))}
@@ -673,36 +859,57 @@ function MountainForm() {
                   Remove
                 </button>
               </div>
-              <input 
-                type="text" 
-                placeholder="Public Transport" 
-                value={item.header}
-                disabled
-                readOnly
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
-              />
-              <input 
-                type="text" 
-                placeholder="Title" 
-                value={item.title}
-                onChange={(e) => {
-                  const newGuides = [...transportationGuides];
-                  newGuides[index].title = e.target.value;
-                  setTransportationGuides(newGuides);
-                }}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all bg-white"
-              />
-              <textarea 
-                placeholder="Description" 
-                rows="3"
-                value={item.description}
-                onChange={(e) => {
-                  const newGuides = [...transportationGuides];
-                  newGuides[index].description = e.target.value;
-                  setTransportationGuides(newGuides);
-                }}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all resize-none bg-white"
-              ></textarea>
+              <div>
+                <label htmlFor={`transport-header-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+                  Transport Type
+                </label>
+                <input 
+                  id={`transport-header-${index}`}
+                  type="text" 
+                  placeholder="Public Transport" 
+                  value={item.header}
+                  onChange={(e) => {
+                    const newGuides = [...transportationGuides];
+                    newGuides[index].header = e.target.value;
+                    setTransportationGuides(newGuides);
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all bg-white"
+                />
+              </div>
+              <div>
+                <label htmlFor={`transport-title-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+                  Title
+                </label>
+                <input 
+                  id={`transport-title-${index}`}
+                  type="text" 
+                  placeholder="Title" 
+                  value={item.title}
+                  onChange={(e) => {
+                    const newGuides = [...transportationGuides];
+                    newGuides[index].title = e.target.value;
+                    setTransportationGuides(newGuides);
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all bg-white"
+                />
+              </div>
+              <div>
+                <label htmlFor={`transport-description-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+                  Description
+                </label>
+                <textarea 
+                  id={`transport-description-${index}`}
+                  placeholder="Description" 
+                  rows="3"
+                  value={item.description}
+                  onChange={(e) => {
+                    const newGuides = [...transportationGuides];
+                    newGuides[index].description = e.target.value;
+                    setTransportationGuides(newGuides);
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all resize-none bg-white"
+                ></textarea>
+              </div>
             </div>
           ))}
           <button 

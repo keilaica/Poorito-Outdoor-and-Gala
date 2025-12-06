@@ -1,0 +1,16 @@
+# Railway ignore file for frontend
+node_modules/
+.env
+.env.local
+*.log
+.DS_Store
+.git/
+.gitignore
+README.md
+*.md
+.vscode/
+.idea/
+src/
+public/
+# Keep build/ directory for serving
+

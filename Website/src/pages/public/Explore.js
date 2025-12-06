@@ -45,6 +45,8 @@ const MountainCard = ({ mountain, viewMode, onExplore }) => {
                 src={mountain.image_url} 
                 alt={mountain.name} 
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                loading="lazy"
+                decoding="async"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
@@ -110,7 +112,7 @@ const MountainCard = ({ mountain, viewMode, onExplore }) => {
               <div className="flex flex-col gap-3 min-w-[140px]">
                 <button 
                   onClick={onExplore}
-                  className="px-6 py-3 rounded-xl text-white text-sm font-semibold bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 whitespace-nowrap"
+                  className="px-6 py-3 rounded-xl text-white text-sm font-semibold bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 whitespace-nowrap touch-manipulation min-h-[44px]"
                 >
                   View Details
                 </button>
@@ -170,7 +172,7 @@ const MountainCard = ({ mountain, viewMode, onExplore }) => {
         
         <button 
           onClick={onExplore}
-          className="w-full px-4 py-3 rounded-xl text-white text-sm font-semibold bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 mt-auto"
+          className="w-full px-4 py-3 rounded-xl text-white text-sm font-semibold bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 mt-auto touch-manipulation min-h-[44px]"
         >
           Explore Trail
         </button>
@@ -270,7 +272,7 @@ function Explore() {
               <div className="flex gap-2 bg-white rounded-xl border border-gray-200 p-1.5 shadow-md">
                 <button
                   onClick={() => setViewMode('grid')}
-                  className={`p-2.5 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-orange-500 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}
+                  className={`p-2.5 rounded-lg transition-all touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center ${viewMode === 'grid' ? 'bg-orange-500 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100 active:bg-gray-200'}`}
                   title="Grid view"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -279,7 +281,7 @@ function Explore() {
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`p-2.5 rounded-lg transition-all ${viewMode === 'list' ? 'bg-orange-500 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}
+                  className={`p-2.5 rounded-lg transition-all touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center ${viewMode === 'list' ? 'bg-orange-500 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100 active:bg-gray-200'}`}
                   title="List view"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -305,7 +307,7 @@ function Explore() {
                   <input 
                     value={cityQuery} 
                     onChange={(e)=>setCityQuery(e.target.value)} 
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3.5 pl-11 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-sm hover:border-gray-300" 
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 sm:py-3.5 pl-11 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-sm hover:border-gray-300 touch-manipulation" 
                     placeholder="Search by name, location, or description..." 
                   />
                 </div>
@@ -318,7 +320,7 @@ function Explore() {
                   <select
                     value={difficultyFilter}
                     onChange={(e) => setDifficultyFilter(e.target.value)}
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-sm hover:border-gray-300 cursor-pointer appearance-none bg-white"
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 sm:py-3.5 pr-10 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-sm hover:border-gray-300 cursor-pointer appearance-none bg-white touch-manipulation min-h-[44px]"
                   >
                     <option value="All">All Difficulties</option>
                     <option value="Easy">🟢 Easy</option>
@@ -341,7 +343,7 @@ function Explore() {
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-sm hover:border-gray-300 cursor-pointer appearance-none bg-white"
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 sm:py-3.5 pr-10 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-sm hover:border-gray-300 cursor-pointer appearance-none bg-white touch-manipulation min-h-[44px]"
                   >
                     <option value="name">📝 Name (A-Z)</option>
                     <option value="elevation">📏 Elevation (High to Low)</option>
@@ -386,15 +388,15 @@ function Explore() {
               {cityQuery || difficultyFilter !== 'All' ? 'Try adjusting your search or filters.' : 'No mountains available yet.'}
             </p>
             {(cityQuery || difficultyFilter !== 'All') && (
-              <button 
-                onClick={() => {
-                  setCityQuery('');
-                  setDifficultyFilter('All');
-                }}
-                className="px-6 py-2.5 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors"
-              >
-                Clear Filters
-              </button>
+                <button 
+                  onClick={() => {
+                    setCityQuery('');
+                    setDifficultyFilter('All');
+                  }}
+                  className="px-6 py-3 sm:py-2.5 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors touch-manipulation min-h-[44px]"
+                >
+                  Clear Filters
+                </button>
             )}
           </div>
         ) : (

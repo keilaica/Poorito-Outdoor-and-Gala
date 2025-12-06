@@ -3,6 +3,11 @@ require('dotenv').config();
 
 // Create reusable transporter object using SMTP transport
 const createTransporter = () => {
+  // Check if email credentials are configured
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
+    throw new Error('SMTP credentials not configured. Please set SMTP_USER and SMTP_PASSWORD in .env file');
+  }
+
   // For development, use Gmail or other SMTP service
   // For production, consider using services like SendGrid, Mailgun, or AWS SES
   const transporter = nodemailer.createTransport({
@@ -13,6 +18,12 @@ const createTransporter = () => {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASSWORD,
     },
+    // Add connection timeout and retry options
+    connectionTimeout: 10000, // 10 seconds
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
+    // For Gmail, we might need to allow less secure apps or use OAuth2
+    // For now, using app password is recommended
   });
 
   return transporter;
@@ -31,27 +42,57 @@ const sendBookingConfirmation = async (userEmail, userName, bookingData, mountai
     if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
       console.log('⚠️  Email not configured. Skipping email notification.');
       console.log('💡 To enable emails, set SMTP_USER and SMTP_PASSWORD in .env');
+      console.log('💡 For Gmail, use App Password (not regular password)');
+      console.log('💡 Generate App Password at: https://myaccount.google.com/apppasswords');
       return { success: false, message: 'Email not configured' };
     }
 
+    console.log('📧 Attempting to send booking confirmation email to:', userEmail);
+    console.log('📧 Using SMTP host:', process.env.SMTP_HOST || 'smtp.gmail.com');
+
     const transporter = createTransporter();
 
-    // Format booking date
-    const bookingDate = new Date(bookingData.booking_date);
-    const formattedDate = bookingDate.toLocaleDateString('en-US', {
+    // Verify transporter connection
+    try {
+      await transporter.verify();
+      console.log('✅ SMTP server connection verified');
+    } catch (verifyError) {
+      console.error('❌ SMTP server verification failed:', verifyError.message);
+      throw new Error(`SMTP connection failed: ${verifyError.message}`);
+    }
+
+    // Format booking date(s) - handle date range
+    const startDate = bookingData.start_date || bookingData.booking_date;
+    const endDate = bookingData.end_date || bookingData.booking_date;
+    const bookingStartDate = new Date(startDate);
+    const bookingEndDate = new Date(endDate);
+    
+    const formattedStartDate = bookingStartDate.toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
     });
+    
+    const formattedEndDate = bookingEndDate.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+    
+    // Format date range for display
+    const formattedDate = startDate === endDate 
+      ? formattedStartDate 
+      : `${formattedStartDate} - ${formattedEndDate}`;
 
     // Calculate days until booking
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const daysUntil = Math.ceil((bookingDate - today) / (1000 * 60 * 60 * 24));
+    const daysUntil = Math.ceil((bookingStartDate - today) / (1000 * 60 * 60 * 24));
     
     // Format time (if available)
-    const formattedTime = bookingDate.toLocaleTimeString('en-US', {
+    const formattedTime = bookingStartDate.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
       hour12: true
@@ -60,6 +101,14 @@ const sendBookingConfirmation = async (userEmail, userName, bookingData, mountai
     // Format number of participants
     const numberOfParticipants = bookingData.number_of_participants ? parseInt(bookingData.number_of_participants) : 1;
     const participantsText = `${numberOfParticipants} ${numberOfParticipants === 1 ? 'person' : 'people'}`;
+    
+    // Format booking type
+    const bookingType = bookingData.booking_type || 'joiner';
+    const bookingTypeText = bookingType === 'exclusive' ? 'Exclusive Hike (Private Group)' : 'Joiner (Shared Group Hike)';
+    
+    // Format total amount
+    const totalAmount = bookingData.total_price ? parseFloat(bookingData.total_price).toFixed(2) : '0.00';
+    const formattedAmount = `₱${parseFloat(totalAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     // Email content
     const mailOptions = {
@@ -378,7 +427,7 @@ const sendBookingConfirmation = async (userEmail, userName, bookingData, mountai
               <p class="greeting">Hello ${userName},</p>
               
               <p class="intro-text">
-                We're thrilled to confirm your booking! Your reservation has been successfully created and you're all set for an amazing adventure.
+                Great news! Your booking request has been confirmed by our admin team. Your reservation is now official and you're all set for an amazing adventure.
               </p>
               
               ${daysUntil > 0 ? `
@@ -407,6 +456,14 @@ const sendBookingConfirmation = async (userEmail, userName, bookingData, mountai
                 <div class="info-row">
                   <span class="info-label">Number of Participants (Pax)</span>
                   <span class="info-value">${participantsText}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Booking Type</span>
+                  <span class="info-value">${bookingTypeText}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Total Amount</span>
+                  <span class="info-value" style="font-size: 16px; color: #f97316; font-weight: 700;">${formattedAmount}</span>
                 </div>
               </div>
               
@@ -440,11 +497,23 @@ const sendBookingConfirmation = async (userEmail, userName, bookingData, mountai
                     <span class="mountain-detail-label">Pax</span>
                     <span class="mountain-detail-value">${participantsText}</span>
                   </div>
+                  <div class="mountain-detail-item">
+                    <span class="mountain-detail-label">Booking Type</span>
+                    <span class="mountain-detail-value">${bookingTypeText}</span>
+                  </div>
+                  <div class="mountain-detail-item">
+                    <span class="mountain-detail-label">Total Amount</span>
+                    <span class="mountain-detail-value" style="color: #f97316; font-weight: 700;">${formattedAmount}</span>
+                  </div>
                 </div>
               </div>
               
               <p class="intro-text" style="margin-top: 30px;">
-                We're excited to be part of your journey! If you have any questions, need to make changes to your booking, or want to prepare for your adventure, feel free to reach out to us.
+                <strong>Important Reminders:</strong><br>
+                • Please arrive on time for your scheduled hike<br>
+                • Bring all necessary equipment and supplies as recommended<br>
+                • If you need to cancel or make changes, please contact us as soon as possible<br>
+                • For any questions or concerns, feel free to reach out to us
               </p>
               
               <div class="divider"></div>
@@ -477,7 +546,7 @@ const sendBookingConfirmation = async (userEmail, userName, bookingData, mountai
         
         Hello ${userName},
         
-        We're thrilled to confirm your booking! Your reservation has been successfully created and you're all set for an amazing adventure.
+        Great news! Your booking request has been confirmed by our admin team. Your reservation is now official and you're all set for an amazing adventure.
         
         ${daysUntil > 0 ? `${daysUntil} ${daysUntil === 1 ? 'day' : 'days'} until your adventure!\n\n` : ''}
         
@@ -487,13 +556,19 @@ const sendBookingConfirmation = async (userEmail, userName, bookingData, mountai
         Booking Date: ${formattedDate}
         Status: ${bookingData.status.toUpperCase()}
         Number of Participants (Pax): ${participantsText}
+        Booking Type: ${bookingTypeText}
+        Total Amount: ${formattedAmount}
         
         MOUNTAIN INFORMATION
         ──────────────────────────────────────
         Name: ${mountainData.name}
         ${mountainData.location ? `Location: ${mountainData.location}\n` : ''}${mountainData.difficulty ? `Difficulty: ${mountainData.difficulty}\n` : ''}${mountainData.elevation ? `Elevation: ${mountainData.elevation}m\n` : ''}Pax: ${participantsText}
 
-        We're excited to be part of your journey! If you have any questions, need to make changes to your booking, or want to prepare for your adventure, feel free to reach out to us.
+        IMPORTANT REMINDERS:
+        • Please arrive on time for your scheduled hike
+        • Bring all necessary equipment and supplies as recommended
+        • If you need to cancel or make changes, please contact us as soon as possible
+        • For any questions or concerns, feel free to reach out to us
         
         View your bookings: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard
         
@@ -510,12 +585,29 @@ const sendBookingConfirmation = async (userEmail, userName, bookingData, mountai
 
     // Send email
     const info = await transporter.sendMail(mailOptions);
-    console.log('✅ Booking confirmation email sent:', info.messageId);
+    console.log('✅ Booking confirmation email sent successfully!');
+    console.log('   Message ID:', info.messageId);
+    console.log('   Response:', info.response);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error('❌ Error sending booking confirmation email:', error);
+    console.error('❌ Error sending booking confirmation email:');
+    console.error('   Error message:', error.message);
+    console.error('   Error code:', error.code);
+    console.error('   Full error:', error);
+    
+    // Provide helpful error messages
+    if (error.code === 'EAUTH') {
+      console.error('💡 Authentication failed. Check your SMTP_USER and SMTP_PASSWORD');
+      console.error('💡 For Gmail, make sure you\'re using an App Password, not your regular password');
+    } else if (error.code === 'ECONNECTION' || error.code === 'ETIMEDOUT') {
+      console.error('💡 Connection failed. Check your SMTP_HOST and SMTP_PORT settings');
+      console.error('💡 Make sure your firewall allows outbound connections on port 587 or 465');
+    } else if (error.code === 'EENVELOPE') {
+      console.error('💡 Invalid recipient email address');
+    }
+    
     // Don't throw error - email failure shouldn't break booking creation
-    return { success: false, error: error.message };
+    return { success: false, error: error.message, code: error.code };
   }
 };
 
@@ -531,10 +623,25 @@ const sendPasswordResetEmail = async (userEmail, userName, resetLink) => {
     if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
       console.log('⚠️  Email not configured. Skipping password reset email.');
       console.log('💡 To enable emails, set SMTP_USER and SMTP_PASSWORD in .env');
+      console.log('💡 For Gmail, use App Password (not regular password)');
+      console.log('💡 Generate App Password at: https://myaccount.google.com/apppasswords');
       return { success: false, message: 'Email not configured' };
     }
 
+    console.log('📧 Attempting to send password reset email to:', userEmail);
+    console.log('📧 Using SMTP host:', process.env.SMTP_HOST || 'smtp.gmail.com');
+    console.log('📧 Using SMTP user:', process.env.SMTP_USER);
+
     const transporter = createTransporter();
+
+    // Verify transporter connection
+    try {
+      await transporter.verify();
+      console.log('✅ SMTP server connection verified');
+    } catch (verifyError) {
+      console.error('❌ SMTP server verification failed:', verifyError.message);
+      throw new Error(`SMTP connection failed: ${verifyError.message}`);
+    }
 
     const mailOptions = {
       from: `"Poorito Team" <${process.env.SMTP_USER}>`,
@@ -707,11 +814,28 @@ const sendPasswordResetEmail = async (userEmail, userName, resetLink) => {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log('✅ Password reset email sent:', info.messageId);
+    console.log('✅ Password reset email sent successfully!');
+    console.log('   Message ID:', info.messageId);
+    console.log('   Response:', info.response);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error('❌ Error sending password reset email:', error);
-    return { success: false, error: error.message };
+    console.error('❌ Error sending password reset email:');
+    console.error('   Error message:', error.message);
+    console.error('   Error code:', error.code);
+    console.error('   Full error:', error);
+    
+    // Provide helpful error messages
+    if (error.code === 'EAUTH') {
+      console.error('💡 Authentication failed. Check your SMTP_USER and SMTP_PASSWORD');
+      console.error('💡 For Gmail, make sure you\'re using an App Password, not your regular password');
+    } else if (error.code === 'ECONNECTION' || error.code === 'ETIMEDOUT') {
+      console.error('💡 Connection failed. Check your SMTP_HOST and SMTP_PORT settings');
+      console.error('💡 Make sure your firewall allows outbound connections on port 587 or 465');
+    } else if (error.code === 'EENVELOPE') {
+      console.error('💡 Invalid recipient email address');
+    }
+    
+    return { success: false, error: error.message, code: error.code };
   }
 };
 

@@ -65,6 +65,7 @@ function App() {
           <Route path="articles-guides/new" element={<ArticleForm />} />
           <Route path="articles-guides/edit/:id" element={<ArticleForm />} />
           <Route path="analytics" element={<Analytics />} />
+          <Route path="bookings" element={<Admin />} />
           <Route path="settings" element={<Admin />} />
         </Route>
       </Routes>

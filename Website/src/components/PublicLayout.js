@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import apiService from '../services/api';
 
@@ -7,6 +7,9 @@ function PublicLayout() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const menuRef = useRef(null);
+  const userMenuRef = useRef(null);
   
   const isActive = (path) => location.pathname === path;
 
@@ -16,6 +19,28 @@ function PublicLayout() {
       setUser(JSON.parse(userData));
     }
   }, []);
+
+  // Close menus when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setShowMobileMenu(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setShowUserMenu(false);
+      }
+    };
+
+    if (showMobileMenu || showUserMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [showMobileMenu, showUserMenu]);
 
   const handleLogout = () => {
     apiService.logout();
@@ -31,23 +56,26 @@ function PublicLayout() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <header className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link to="/" onClick={scrollToTop} className="flex items-center space-x-3">
-            <img
-              src="/poorito-logo.jpg"
-              alt="Poorito"
-              className="h-12 w-12 object-contain rounded-full shadow-md"
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+          <Link to="/" onClick={scrollToTop} className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
+              <img
+                src="/poorito-logo-nogb.png"
+                alt="Poorito"
+                className="h-10 w-10 sm:h-12 sm:w-12 object-contain rounded-full shadow-md"
+                loading="eager"
+                decoding="async"
               onError={(e)=>{
                 e.currentTarget.style.display='none';
                 const fallback=document.createElement('div');
-                fallback.className='w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary-dark shadow-md flex items-center justify-center';
-                fallback.innerHTML='<span class="text-white font-bold text-sm">P</span>';
+                fallback.className='w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-primary to-primary-dark shadow-md flex items-center justify-center';
+                fallback.innerHTML='<span class="text-white font-bold text-xs sm:text-sm">P</span>';
                 e.currentTarget.parentElement?.prepend(fallback);
               }}
             />
-            <span className="font-extrabold text-2xl tracking-tight bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">Poorito</span>
+            <span className="font-extrabold text-xl sm:text-2xl tracking-tight bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">Poorito</span>
           </Link>
 
+          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-2 bg-gray-50/60 px-2 py-1 rounded-full shadow-sm border border-gray-100">
             <Link
               to="/"
@@ -95,28 +123,46 @@ function PublicLayout() {
             </Link>
           </nav>
 
-          <div className="flex items-center space-x-3">
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setShowMobileMenu(!showMobileMenu)}
+            className="md:hidden p-2 rounded-lg text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors touch-manipulation"
+            aria-label="Toggle menu"
+          >
+            {showMobileMenu ? (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
+          </button>
+
+          <div className="flex items-center space-x-2 sm:space-x-3">
             {user ? (
-              <div className="relative">
+              <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                  className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors touch-manipulation min-h-[44px] min-w-[44px]"
+                  aria-label="User menu"
                 >
-                  <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white text-sm">
+                  <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white text-sm flex-shrink-0">
                     {user.username?.charAt(0).toUpperCase() || 'U'}
                   </div>
-                  <span className="hidden md:block">{user.username}</span>
+                  <span className="hidden sm:block">{user.username}</span>
                 </button>
                 
                 {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 animate-fadeIn">
                     <div className="px-4 py-2 border-b border-gray-100">
                       <p className="text-sm font-semibold text-gray-900">{user.username}</p>
                       <p className="text-xs text-gray-500">{user.email}</p>
                     </div>
                     <Link
                       to="/dashboard"
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors touch-manipulation min-h-[44px] flex items-center"
                       onClick={() => {
                         setShowUserMenu(false);
                         scrollToTop();
@@ -126,7 +172,7 @@ function PublicLayout() {
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100"
+                      className="block w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100 touch-manipulation min-h-[44px] flex items-center"
                     >
                       🚪 Logout
                     </button>
@@ -134,18 +180,18 @@ function PublicLayout() {
                 )}
               </div>
             ) : (
-              <div className="flex items-center space-x-3">
+              <div className="hidden sm:flex items-center space-x-2 sm:space-x-3">
                 <Link 
                   to="/login" 
                   onClick={scrollToTop}
-                  className="text-xs md:text-sm font-medium text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="text-xs sm:text-sm font-medium text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors touch-manipulation min-h-[44px] flex items-center"
                 >
                   Sign In
                 </Link>
                 <Link 
                   to="/register" 
                   onClick={scrollToTop}
-                  className="text-xs md:text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded-lg transition-colors"
+                  className="text-xs sm:text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded-lg transition-colors touch-manipulation min-h-[44px] flex items-center"
                 >
                   Sign Up
                 </Link>
@@ -153,6 +199,95 @@ function PublicLayout() {
             )}
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        {showMobileMenu && (
+          <div className="md:hidden bg-white border-b border-gray-200 shadow-lg animate-fadeIn" ref={menuRef}>
+            <div className="px-4 py-4 space-y-1">
+              <Link
+                to="/"
+                onClick={() => {
+                  setShowMobileMenu(false);
+                  scrollToTop();
+                }}
+                className={`block px-4 py-3 text-base font-semibold rounded-lg transition-colors touch-manipulation min-h-[44px] flex items-center ${
+                  isActive('/')
+                    ? 'bg-orange-500 text-white'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                Home
+              </Link>
+              <Link
+                to="/explore"
+                onClick={() => {
+                  setShowMobileMenu(false);
+                  scrollToTop();
+                }}
+                className={`block px-4 py-3 text-base font-semibold rounded-lg transition-colors touch-manipulation min-h-[44px] flex items-center ${
+                  isActive('/explore')
+                    ? 'bg-orange-500 text-white'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                Explore
+              </Link>
+              <Link
+                to="/guides"
+                onClick={() => {
+                  setShowMobileMenu(false);
+                  scrollToTop();
+                }}
+                className={`block px-4 py-3 text-base font-semibold rounded-lg transition-colors touch-manipulation min-h-[44px] flex items-center ${
+                  isActive('/guides')
+                    ? 'bg-orange-500 text-white'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                Guides
+              </Link>
+              <Link
+                to="/about"
+                onClick={() => {
+                  setShowMobileMenu(false);
+                  scrollToTop();
+                }}
+                className={`block px-4 py-3 text-base font-semibold rounded-lg transition-colors touch-manipulation min-h-[44px] flex items-center ${
+                  isActive('/about')
+                    ? 'bg-orange-500 text-white'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                About
+              </Link>
+              {!user && (
+                <>
+                  <div className="border-t border-gray-200 my-2"></div>
+                  <Link
+                    to="/login"
+                    onClick={() => {
+                      setShowMobileMenu(false);
+                      scrollToTop();
+                    }}
+                    className="block px-4 py-3 text-base font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition-colors touch-manipulation min-h-[44px] flex items-center"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    to="/register"
+                    onClick={() => {
+                      setShowMobileMenu(false);
+                      scrollToTop();
+                    }}
+                    className="block px-4 py-3 text-base font-semibold text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition-colors touch-manipulation min-h-[44px] flex items-center justify-center"
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </header>
 
       <main className="flex-1">
@@ -160,21 +295,23 @@ function PublicLayout() {
       </main>
 
       <footer className="border-t border-gray-100 bg-white">
-        <div className="max-w-7xl mx-auto px-6 py-10">
-          <div className="flex flex-col md:flex-row items-center md:justify-between mb-6">
-            <div className="flex items-center space-x-3 mb-4 md:mb-0">
-              <img
-                src="/poorito-logo.jpg"
-                alt="Poorito"
-                className="h-10 w-10 object-contain rounded-full shadow-sm"
-              />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+          <div className="flex flex-col md:flex-row items-center md:justify-between mb-6 gap-4">
+            <div className="flex items-center space-x-3">
+            <img
+              src="/poorito-logo-nogb.png"
+              alt="Poorito"
+              className="h-10 w-10 object-contain rounded-full shadow-sm"
+              loading="lazy"
+              decoding="async"
+            />
               <span className="font-bold text-lg">Poorito</span>
             </div>
-            <div className="flex items-center space-x-6 text-sm text-gray-600">
-              <a href="#" className="hover:text-gray-900">Privacy</a>
-              <a href="#" className="hover:text-gray-900">Terms</a>
-              <a href="#" className="hover:text-gray-900">Contact</a>
-              <Link to="/admin-login" className="hover:text-gray-900">Admin Portal</Link>
+            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm text-gray-600">
+              <a href="#" className="hover:text-gray-900 touch-manipulation min-h-[44px] flex items-center">Privacy</a>
+              <a href="#" className="hover:text-gray-900 touch-manipulation min-h-[44px] flex items-center">Terms</a>
+              <a href="#" className="hover:text-gray-900 touch-manipulation min-h-[44px] flex items-center">Contact</a>
+              <Link to="/admin-login" className="hover:text-gray-900 touch-manipulation min-h-[44px] flex items-center">Admin Portal</Link>
             </div>
           </div>
           <div className="text-center md:text-left text-sm text-gray-500">

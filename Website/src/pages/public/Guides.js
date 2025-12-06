@@ -49,7 +49,7 @@ function Guides() {
             </h1>
             <p className="text-gray-600 text-base md:text-lg leading-relaxed">
               Step-by-step references for planning, packing, and staying safe on every trail.
-              Learn from curated best practices tailored for mountains around CALABARZON and beyond.
+              Learn from curated best practices tailored for mountains around LUZON and beyond.
             </p>
           </div>
           <div className="w-full lg:w-auto">

@@ -9,7 +9,7 @@ router.get('/', async (req, res) => {
   try {
     const { data: mountains, error } = await supabase
       .from('mountains')
-      .select('id, name, elevation, location, difficulty, description, image_url, additional_images, created_at, updated_at')
+      .select('id, name, elevation, location, difficulty, description, image_url, additional_images, trip_duration, base_price_per_head, joiner_capacity, is_joiner_available, is_exclusive_available, created_at, updated_at')
       .order('name', { ascending: true });
 
     if (error) {
@@ -73,7 +73,7 @@ router.get('/:id', async (req, res) => {
 // Create mountain (admin only) - temporarily without auth for testing
 router.post('/', async (req, res) => {
   try {
-    const { name, elevation, location, difficulty, description, image_url, additional_images } = req.body;
+    const { name, elevation, location, difficulty, description, image_url, additional_images, trip_duration, base_price_per_head, joiner_capacity, is_joiner_available, is_exclusive_available } = req.body;
     
     // Debug: Log received data
     console.log('Received mountain data:', {
@@ -82,6 +82,7 @@ router.post('/', async (req, res) => {
       location,
       difficulty,
       description,
+      trip_duration,
       image_url: image_url ? `${image_url.substring(0, 50)}...` : 'No image',
       additional_images_count: additional_images ? additional_images.length : 0
     });
@@ -98,8 +99,13 @@ router.post('/', async (req, res) => {
         location,
         difficulty,
         description,
+        trip_duration: trip_duration || 1, // Default to 1 day if not provided
         image_url,
         additional_images: Array.isArray(additional_images) ? additional_images : [],
+        base_price_per_head: base_price_per_head || 1599.00,
+        joiner_capacity: joiner_capacity || 14,
+        is_joiner_available: is_joiner_available !== undefined ? is_joiner_available : true,
+        is_exclusive_available: is_exclusive_available !== undefined ? is_exclusive_available : true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }])
@@ -136,6 +142,11 @@ router.put('/:id', async (req, res) => {
       description, 
       image_url,
       additional_images,
+      trip_duration,
+      base_price_per_head,
+      joiner_capacity,
+      is_joiner_available,
+      is_exclusive_available,
       what_to_bring,
       budgeting,
       itinerary,
@@ -162,7 +173,12 @@ router.put('/:id', async (req, res) => {
     if (location !== undefined) updateData.location = location;
     if (difficulty !== undefined) updateData.difficulty = difficulty;
     if (description !== undefined) updateData.description = description;
+    if (trip_duration !== undefined) updateData.trip_duration = parseInt(trip_duration) || 1;
     if (image_url !== undefined) updateData.image_url = image_url;
+    if (base_price_per_head !== undefined) updateData.base_price_per_head = parseFloat(base_price_per_head) || 0;
+    if (joiner_capacity !== undefined) updateData.joiner_capacity = parseInt(joiner_capacity) || 14;
+    if (is_joiner_available !== undefined) updateData.is_joiner_available = is_joiner_available;
+    if (is_exclusive_available !== undefined) updateData.is_exclusive_available = is_exclusive_available;
     
     // ALWAYS include additional_images - frontend always sends it
     // Ensure it's always an array format for JSONB column

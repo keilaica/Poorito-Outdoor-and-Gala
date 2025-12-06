@@ -1,19 +1,30 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import apiService from '../services/api';
 import MountainDetailForm from '../components/MountainDetailForm';
 import MountainEditForm from '../components/MountainEditForm';
 
 function Admin() {
-  const [activeTab, setActiveTab] = useState('mountains');
+  const location = useLocation();
+  // Set initial tab based on URL path
+  const getInitialTab = () => {
+    if (location.pathname.includes('/bookings')) return 'bookings';
+    if (location.pathname.includes('/settings')) return 'mountains';
+    return 'mountains';
+  };
+  const [activeTab, setActiveTab] = useState(getInitialTab());
   const [mountains, setMountains] = useState([]);
   const [articles, setArticles] = useState([]);
   const [mountainDetails, setMountainDetails] = useState([]);
+  const [bookings, setBookings] = useState([]);
+  const [bookingStatusFilter, setBookingStatusFilter] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('create');
   const [editingItem, setEditingItem] = useState(null);
+  const [processingBooking, setProcessingBooking] = useState(null);
 
   const currentDate = new Date().toLocaleDateString('en-US', { 
     weekday: 'long', 
@@ -22,9 +33,18 @@ function Admin() {
     year: 'numeric' 
   });
 
+  // Update active tab when route changes
+  useEffect(() => {
+    if (location.pathname.includes('/bookings')) {
+      setActiveTab('bookings');
+    } else if (location.pathname.includes('/settings')) {
+      setActiveTab('mountains');
+    }
+  }, [location.pathname]);
+
   useEffect(() => {
     fetchData();
-  }, [activeTab]);
+  }, [activeTab, bookingStatusFilter]);
 
   const fetchMountains = async () => {
     try {
@@ -79,6 +99,16 @@ function Admin() {
           });
         }
         setMountainDetails(details);
+      } else if (activeTab === 'bookings') {
+        try {
+          const data = await apiService.getAllBookings(bookingStatusFilter);
+          console.log('Fetched bookings:', data);
+          setBookings(data.bookings || []);
+        } catch (bookingErr) {
+          console.error('Error fetching bookings:', bookingErr);
+          setError(bookingErr.message || 'Failed to load bookings');
+          setBookings([]);
+        }
       }
     } catch (err) {
       console.error('Failed to fetch data:', err);
@@ -155,6 +185,46 @@ function Admin() {
     detail.section_type.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const filteredBookings = bookings.filter(booking => {
+    const searchLower = searchTerm.toLowerCase();
+    const mountainName = booking.mountains?.name?.toLowerCase() || '';
+    const userName = booking.users?.username?.toLowerCase() || '';
+    const userEmail = booking.users?.email?.toLowerCase() || '';
+    return mountainName.includes(searchLower) || 
+           userName.includes(searchLower) || 
+           userEmail.includes(searchLower);
+  });
+
+  const handleApproveBooking = async (bookingId) => {
+    try {
+      setProcessingBooking(bookingId);
+      await apiService.approveBooking(bookingId);
+      await fetchData(); // Refresh bookings
+      setError(null);
+    } catch (err) {
+      console.error('Failed to approve booking:', err);
+      setError(err.message || 'Failed to approve booking');
+    } finally {
+      setProcessingBooking(null);
+    }
+  };
+
+  const handleRejectBooking = async (bookingId) => {
+    if (!window.confirm('Are you sure you want to reject this booking?')) return;
+    
+    try {
+      setProcessingBooking(bookingId);
+      await apiService.rejectBooking(bookingId);
+      await fetchData(); // Refresh bookings
+      setError(null);
+    } catch (err) {
+      console.error('Failed to reject booking:', err);
+      setError(err.message || 'Failed to reject booking');
+    } finally {
+      setProcessingBooking(null);
+    }
+  };
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -205,6 +275,16 @@ function Admin() {
           >
             Articles ({articles.length})
           </button>
+          <button
+            onClick={() => setActiveTab('bookings')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'bookings'
+                ? 'border-orange-500 text-orange-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Bookings ({bookings.length})
+          </button>
         </nav>
       </div>
 
@@ -225,9 +305,23 @@ function Admin() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center p-6 border-b border-gray-200 gap-4">
           <h2 className="text-xl font-semibold text-gray-900">
-            Manage {activeTab === 'mountains' ? 'Mountains' : activeTab === 'articles' ? 'Articles' : 'Mountain Details'}
+            Manage {activeTab === 'mountains' ? 'Mountains' : activeTab === 'articles' ? 'Articles' : activeTab === 'bookings' ? 'Bookings' : 'Mountain Details'}
           </h2>
           <div className="flex flex-wrap gap-3">
+            {activeTab === 'bookings' && (
+              <select
+                value={bookingStatusFilter || ''}
+                onChange={(e) => setBookingStatusFilter(e.target.value || null)}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+              >
+                <option value="">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="rejected">Rejected</option>
+                <option value="completed">Completed</option>
+              </select>
+            )}
             <input 
               type="text" 
               placeholder={`Search ${activeTab}...`}
@@ -262,6 +356,17 @@ function Admin() {
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Category</th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Created</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                  </tr>
+                ) : activeTab === 'bookings' ? (
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">User</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Mountain</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Dates</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Type</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Participants</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Total Price</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
                   </tr>
                 ) : (
@@ -348,6 +453,83 @@ function Admin() {
                       </td>
                     </tr>
                   ))
+                ) : activeTab === 'bookings' ? (
+                  filteredBookings.map((booking) => {
+                    const startDate = booking.start_date || booking.booking_date;
+                    const endDate = booking.end_date || booking.booking_date;
+                    const start = new Date(startDate);
+                    const end = new Date(endDate);
+                    
+                    return (
+                      <tr key={booking.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 text-sm">
+                          <div className="font-medium text-gray-900">{booking.users?.username || 'N/A'}</div>
+                          <div className="text-xs text-gray-500">{booking.users?.email || ''}</div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900 font-medium">
+                          {booking.mountains?.name || 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600">
+                          <div>{start.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                          {startDate !== endDate && (
+                            <div className="text-xs text-gray-500">to {end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            booking.booking_type === 'exclusive'
+                              ? 'bg-purple-100 text-purple-800'
+                              : 'bg-blue-100 text-blue-800'
+                          }`}>
+                            {booking.booking_type === 'exclusive' ? 'Exclusive' : 'Joiner'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600">
+                          {booking.number_of_participants || 1}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900 font-semibold">
+                          ₱{booking.total_price ? parseFloat(booking.total_price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                            booking.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                            booking.status === 'rejected' ? 'bg-gray-100 text-gray-800' :
+                            'bg-blue-100 text-blue-800'
+                          }`}>
+                            {booking.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex gap-2">
+                            {booking.status === 'pending' && (
+                              <>
+                                <button
+                                  onClick={() => handleApproveBooking(booking.id)}
+                                  disabled={processingBooking === booking.id}
+                                  className={`px-3 py-1.5 text-green-600 hover:text-green-700 border border-green-300 hover:border-green-400 rounded-md text-xs font-medium transition-all ${
+                                    processingBooking === booking.id ? 'opacity-50 cursor-not-allowed' : ''
+                                  }`}
+                                >
+                                  {processingBooking === booking.id ? 'Processing...' : 'Approve'}
+                                </button>
+                                <button
+                                  onClick={() => handleRejectBooking(booking.id)}
+                                  disabled={processingBooking === booking.id}
+                                  className={`px-3 py-1.5 text-red-600 hover:text-red-700 border border-red-300 hover:border-red-400 rounded-md text-xs font-medium transition-all ${
+                                    processingBooking === booking.id ? 'opacity-50 cursor-not-allowed' : ''
+                                  }`}
+                                >
+                                  {processingBooking === booking.id ? 'Processing...' : 'Reject'}
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   filteredMountainDetails.map((detail) => {
                     const getSectionColor = (sectionType) => {
@@ -424,19 +606,22 @@ function Admin() {
             
             {((activeTab === 'mountains' && filteredMountains.length === 0) || 
               (activeTab === 'articles' && filteredArticles.length === 0) ||
+              (activeTab === 'bookings' && filteredBookings.length === 0) ||
               (activeTab === 'mountain-details' && filteredMountainDetails.length === 0)) && (
               <div className="text-center py-12">
                 <div className="text-gray-400 text-6xl mb-4">📝</div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No {activeTab.replace('-', ' ')} found</h3>
                 <p className="text-gray-500 mb-4">
-                  {searchTerm ? 'Try adjusting your search terms' : `Get started by adding your first ${activeTab === 'mountain-details' ? 'mountain detail' : activeTab.slice(0, -1)}`}
+                  {searchTerm || bookingStatusFilter ? 'Try adjusting your search terms or filters' : activeTab === 'bookings' ? 'No bookings yet. Bookings will appear here once users make reservations.' : `Get started by adding your first ${activeTab === 'mountain-details' ? 'mountain detail' : activeTab.slice(0, -1)}`}
                 </p>
-                <button
-                  onClick={() => handleCreate(activeTab)}
-                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
-                >
-                  Add {activeTab === 'mountains' ? 'Mountain' : activeTab === 'articles' ? 'Article' : 'Mountain Detail'}
-                </button>
+                {activeTab !== 'bookings' && (
+                  <button
+                    onClick={() => handleCreate(activeTab)}
+                    className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+                  >
+                    Add {activeTab === 'mountains' ? 'Mountain' : activeTab === 'articles' ? 'Article' : 'Mountain Detail'}
+                  </button>
+                )}
               </div>
             )}
           </div>

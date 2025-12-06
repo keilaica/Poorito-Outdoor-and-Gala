@@ -88,12 +88,26 @@ function UserDashboard() {
     });
   };
 
+  const formatDateRange = (startDate, endDate) => {
+    if (!startDate) return 'N/A';
+    const start = formatDate(startDate);
+    if (!endDate || startDate === endDate) {
+      return start;
+    }
+    const end = formatDate(endDate);
+    return `${start} - ${end}`;
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
       case 'confirmed':
         return 'bg-green-100 text-green-800';
       case 'cancelled':
         return 'bg-red-100 text-red-800';
+      case 'rejected':
+        return 'bg-gray-100 text-gray-800';
       case 'completed':
         return 'bg-blue-100 text-blue-800';
       default:
@@ -127,7 +141,7 @@ function UserDashboard() {
             <div className="flex items-center group cursor-pointer" onClick={() => navigate('/')}>
               <div className="relative">
                 <img
-                  src="/poorito-logo.jpg"
+                  src="/poorito-logo-nogb.png"
                   alt="Poorito"
                   className="w-12 h-12 rounded-xl mr-3 shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105"
                   onError={(e) => {
@@ -289,7 +303,7 @@ function UserDashboard() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-gray-700 bg-white/60 rounded-xl p-4 border border-gray-100">
                           <div className="flex items-center gap-2">
                             <span className="text-gray-400">📅</span>
-                            <span><strong className="text-gray-900">Booking Date:</strong> {formatDate(booking.booking_date)}</span>
+                            <span><strong className="text-gray-900">Booking Date:</strong> {formatDateRange(booking.start_date || booking.booking_date, booking.end_date || booking.booking_date)}</span>
                           </div>
                           {booking.number_of_participants && (
                             <div className="flex items-center gap-2">
@@ -311,12 +325,12 @@ function UserDashboard() {
                         >
                           📄 View Receipt
                         </button>
-                        {booking.status === 'confirmed' && (
+                        {(booking.status === 'pending' || booking.status === 'confirmed') && (
                           <button
                             onClick={() => openCancelModal(booking)}
                             className="px-5 py-3 text-sm font-semibold text-red-700 bg-red-50 border-2 border-red-200 rounded-xl hover:bg-red-100 hover:border-red-300 transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
                           >
-                            Cancel Booking
+                            {booking.status === 'pending' ? 'Cancel Request' : 'Cancel Booking'}
                           </button>
                         )}
                         <button
@@ -361,7 +375,7 @@ function UserDashboard() {
                 <div className="space-y-2 text-sm text-gray-700">
                   <p className="flex items-center gap-2">
                     <span className="text-gray-400">📅</span>
-                    <span><span className="font-semibold text-gray-900">Booking Date:</span> {formatDate(bookingToCancel.booking_date)}</span>
+                    <span><span className="font-semibold text-gray-900">Booking Date:</span> {formatDateRange(bookingToCancel.start_date || bookingToCancel.booking_date, bookingToCancel.end_date || bookingToCancel.booking_date)}</span>
                   </p>
                   {bookingToCancel.number_of_participants && (
                     <p className="flex items-center gap-2">

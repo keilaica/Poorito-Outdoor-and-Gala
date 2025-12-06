@@ -81,9 +81,11 @@ function Register() {
         <div className="text-center mb-8">
           <div className="inline-block">
             <img
-              src="/poorito-logo.jpg"
+              src="/poorito-logo-nogb.png"
               alt="Poorito"
               className="w-24 h-24 mx-auto object-contain rounded-full shadow-xl mb-4 ring-4 ring-orange-100"
+              loading="eager"
+              decoding="async"
               onError={(e) => {
                 e.target.style.display = 'none';
                 const fallback = document.createElement('div');

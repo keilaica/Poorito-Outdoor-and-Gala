@@ -8,3 +8,72 @@
   }
 }
 
+@layer utilities {
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
+  .animate-fadeIn {
+    animation: fadeIn 0.2s ease-out;
+    will-change: opacity;
+  }
+  
+  .animate-scaleIn {
+    animation: scaleIn 0.3s ease-out;
+    will-change: transform, opacity;
+  }
+  
+  /* Optimize scrolling performance */
+  .overscroll-contain {
+    overscroll-behavior: contain;
+  }
+
+  /* Touch-friendly interactions */
+  .touch-manipulation {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Smooth transitions for mobile */
+  @media (prefers-reduced-motion: no-preference) {
+    * {
+      transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+      transition-duration: 150ms;
+    }
+  }
+
+  /* Responsive image optimization */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Better mobile input styling */
+  input, textarea, select {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  @media (max-width: 640px) {
+    input, textarea, select {
+      font-size: 16px;
+    }
+  }
+}
+

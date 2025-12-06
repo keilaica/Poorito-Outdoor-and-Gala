@@ -58,7 +58,7 @@ function Login() {
         <div className="text-center mb-8">
           <div className="inline-block">
             <img
-              src="/poorito-logo.jpg"
+              src="/poorito-logo-nogb.png"
               alt="Poorito"
               className="w-32 h-32 mx-auto object-contain rounded-full shadow-2xl mb-4 ring-4 ring-orange-100"
               onError={(e) => {

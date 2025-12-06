@@ -1,5 +1,6 @@
 // API service for backend communication
-const API_BASE_URL = 'http://localhost:5000/api';
+// Use environment variable in production, fallback to localhost for development
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 class ApiService {
   constructor() {
@@ -213,13 +214,15 @@ class ApiService {
     return this.request('/bookings/my-bookings');
   }
 
-  async createBooking(mountainId, bookingDate, numberOfParticipants = 1) {
+  async createBooking(mountainId, startDate, endDate, numberOfParticipants = 1, bookingType = 'joiner') {
     return this.request('/bookings', {
       method: 'POST',
       body: JSON.stringify({ 
         mountain_id: mountainId, 
-        booking_date: bookingDate,
-        number_of_participants: numberOfParticipants
+        start_date: startDate,
+        end_date: endDate,
+        number_of_participants: numberOfParticipants,
+        booking_type: bookingType
       }),
     });
   }
@@ -236,6 +239,30 @@ class ApiService {
 
   async getBookingReceipt(bookingId) {
     return this.request(`/bookings/${bookingId}/receipt`);
+  }
+
+  async getAvailability(mountainId, startDate, endDate) {
+    return this.request(`/bookings/availability/${mountainId}?start_date=${startDate}&end_date=${endDate}`);
+  }
+
+  // Admin booking management
+  async getAllBookings(status = null) {
+    const url = status 
+      ? `/bookings/admin/all?status=${status}`
+      : '/bookings/admin/all';
+    return this.request(url);
+  }
+
+  async approveBooking(bookingId) {
+    return this.request(`/bookings/${bookingId}/approve`, {
+      method: 'PUT',
+    });
+  }
+
+  async rejectBooking(bookingId) {
+    return this.request(`/bookings/${bookingId}/reject`, {
+      method: 'PUT',
+    });
   }
 
   // Mountain details endpoints

@@ -46,7 +46,7 @@ function AdminLayout() {
   const handleLogout = () => {
     apiService.logout();
     localStorage.removeItem('user');
-    navigate('/admin-login');
+    navigate('/login');
   };
 
   return (
@@ -56,9 +56,18 @@ function AdminLayout() {
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           {/* Logo and Brand */}
           <Link to="/admin" className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 shadow-sm flex items-center justify-center">
-              <span className="text-white font-bold text-sm">P</span>
-            </div>
+            <img
+              src="/poorito-logo-nogb.png"
+              alt="Poorito"
+              className="w-10 h-10 object-contain rounded-full shadow-sm"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                const fallback = document.createElement('div');
+                fallback.className = 'w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 shadow-sm flex items-center justify-center';
+                fallback.innerHTML = '<span class="text-white font-bold text-sm">P</span>';
+                e.currentTarget.parentElement?.prepend(fallback);
+              }}
+            />
             <div>
               <span className="font-bold text-xl text-gray-900">Poorito</span>
               <span className="text-sm text-gray-500 ml-2">Admin Panel</span>
@@ -90,6 +99,14 @@ function AdminLayout() {
               }`}
             >
               Articles & Guides
+            </Link>
+            <Link 
+              to="/admin/bookings" 
+              className={`text-sm font-medium px-3 py-2 rounded-lg transition-colors ${
+                isActive('/admin/bookings') ? 'text-orange-600 bg-orange-50' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              Bookings
             </Link>
             <Link 
               to="/admin/analytics" 
@@ -180,6 +197,15 @@ function AdminLayout() {
               onClick={() => setShowMobileMenu(false)}
             >
               Articles & Guides
+            </Link>
+            <Link 
+              to="/admin/bookings" 
+              className={`block text-sm font-medium px-3 py-2 rounded-lg transition-colors ${
+                isActive('/admin/bookings') ? 'text-orange-600 bg-orange-50' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+              onClick={() => setShowMobileMenu(false)}
+            >
+              Bookings
             </Link>
             <Link 
               to="/admin/analytics" 

@@ -46,6 +46,16 @@ function Receipt() {
     });
   };
 
+  const formatDateRange = (startDate, endDate) => {
+    if (!startDate) return 'N/A';
+    const start = formatDate(startDate);
+    if (!endDate || startDate === endDate) {
+      return start;
+    }
+    const end = formatDate(endDate);
+    return `${start} - ${end}`;
+  };
+
   const formatDateTime = (dateString) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleString('en-US', {
@@ -160,7 +170,9 @@ function Receipt() {
                 </div>
                 <div className="flex items-baseline">
                   <span className="w-40 text-gray-600">Booking Date:</span>
-                  <span className="font-medium text-gray-900">{formatDate(receipt.booking.booking_date)}</span>
+                  <span className="font-medium text-gray-900">
+                    {formatDateRange(receipt.booking.start_date || receipt.booking.booking_date, receipt.booking.end_date || receipt.booking.booking_date)}
+                  </span>
                 </div>
                 <div className="flex items-baseline">
                   <span className="w-40 text-gray-600">Status:</span>
@@ -237,6 +249,53 @@ function Receipt() {
               </div>
             </div>
           </div>
+
+          {/* Fees Breakdown */}
+          {receipt.mountain?.budgeting && Array.isArray(receipt.mountain.budgeting) && receipt.mountain.budgeting.length > 0 && (
+            <div className="border-t-2 border-gray-200 pt-6 mb-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Fees Breakdown</h2>
+              <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <div className="space-y-3 mb-4">
+                  {receipt.mountain.budgeting.map((fee, index) => {
+                    const feeAmount = parseFloat(fee.item_amount || 0);
+                    const numberOfParticipants = receipt.booking.number_of_participants || 1;
+                    const totalForFee = feeAmount * numberOfParticipants;
+                    return (
+                      <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
+                        <div className="flex-1">
+                          <span className="text-gray-900 font-medium">{fee.item_name}</span>
+                          {numberOfParticipants > 1 && (
+                            <span className="text-gray-500 text-sm ml-2">
+                              (₱{feeAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} × {numberOfParticipants} {fee.item_unit || 'pax'})
+                            </span>
+                          )}
+                          {numberOfParticipants === 1 && fee.item_unit && (
+                            <span className="text-gray-500 text-sm ml-2">({fee.item_unit})</span>
+                          )}
+                        </div>
+                        <span className="font-semibold text-gray-900">
+                          ₱{totalForFee.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="border-t-2 border-gray-300 pt-4 mt-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-lg font-bold text-gray-900">Total Fees:</span>
+                    <span className="text-2xl font-bold text-orange-600">
+                      ₱{(
+                        receipt.mountain.budgeting.reduce((total, fee) => {
+                          const numberOfParticipants = receipt.booking.number_of_participants || 1;
+                          return total + (parseFloat(fee.item_amount || 0) * numberOfParticipants);
+                        }, 0)
+                      ).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Footer */}
           <div className="border-t-2 border-gray-200 pt-6 mt-8">

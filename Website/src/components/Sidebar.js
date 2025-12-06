@@ -26,7 +26,7 @@ function Sidebar() {
     <div className="fixed left-0 top-0 h-screen w-64 bg-white border-r border-gray-200 shadow-lg z-50 flex flex-col">
       <div className="p-6 text-center border-b border-gray-100">
         <img 
-          src="/poorito-logo.jpg" 
+          src="/poorito-logo-nogb.png" 
           alt="Poorito" 
           className="w-28 h-28 mx-auto object-contain" 
           onError={(e) => {

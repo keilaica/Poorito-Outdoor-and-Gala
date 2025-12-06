@@ -9,7 +9,7 @@ function About() {
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-extrabold mb-4">About Poorito</h1>
             <p className="text-xl md:text-2xl text-orange-100 max-w-3xl mx-auto">
-              Your trusted companion for mountain adventures in CALABARZON and beyond
+              Your trusted companion for mountain adventures in LUZON and beyond
             </p>
           </div>
         </div>
@@ -25,9 +25,11 @@ function About() {
                 <div className="text-center">
                   <div className="text-8xl mb-4">⛰️</div>
                   <img
-                    src="/poorito-logo.jpg"
+                    src="/poorito-logo-nogb.png"
                     alt="Poorito"
                     className="h-24 w-24 mx-auto object-contain rounded-full shadow-lg"
+                    loading="lazy"
+                    decoding="async"
                   />
                 </div>
               </div>
@@ -41,7 +43,7 @@ function About() {
               </p>
               <p className="text-gray-700 leading-relaxed mb-4">
                 Today, we're proud to be a comprehensive platform that helps adventurers discover, plan, 
-                and experience the best trails across CALABARZON and beyond. Whether you're a beginner 
+                and experience the best trails across LUZON and beyond. Whether you're a beginner 
                 or an experienced mountaineer, we're here to guide your journey.
               </p>
               <p className="text-gray-700 leading-relaxed">

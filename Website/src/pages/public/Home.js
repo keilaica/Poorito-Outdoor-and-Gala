@@ -28,19 +28,19 @@ function Home() {
     }
   };
 
-  // Helper to determine if a location is within CALABARZON (Region IV‑A)
-  const isCalabarzon = (location = '') => {
-    const provinces = ['Cavite', 'Laguna', 'Batangas', 'Rizal', 'Quezon', 'CALABARZON', 'Region IV-A', 'Region 4A'];
+  // Helper to determine if a location is within LUZON
+  const isLuzon = (location = '') => {
+    const provinces = ['Cavite', 'Laguna', 'Batangas', 'Rizal', 'Quezon', 'LUZON', 'Region IV-A', 'Region 4A'];
     return provinces.some(p => location.toLowerCase().includes(p.toLowerCase()));
   };
 
   // Derive lists for sections
-  const calabarzonMountains = useMemo(() => (
-    (mountains || []).filter(m => isCalabarzon(m.location))
+  const luzonMountains = useMemo(() => (
+    (mountains || []).filter(m => isLuzon(m.location))
   ), [mountains]);
 
   const beyondMountains = useMemo(() => (
-    (mountains || []).filter(m => !isCalabarzon(m.location))
+    (mountains || []).filter(m => !isLuzon(m.location))
   ), [mountains]);
 
   // Apply search to all mountains
@@ -63,13 +63,13 @@ function Home() {
     });
   }, [mountains, cityQuery]);
 
-  // Separate filtered results back into CALABARZON and beyond
-  const filteredCalabarzon = useMemo(() => (
-    filteredMountains.filter(m => isCalabarzon(m.location))
+  // Separate filtered results back into LUZON and beyond
+  const filteredLuzon = useMemo(() => (
+    filteredMountains.filter(m => isLuzon(m.location))
   ), [filteredMountains]);
 
   const filteredBeyond = useMemo(() => (
-    filteredMountains.filter(m => !isCalabarzon(m.location))
+    filteredMountains.filter(m => !isLuzon(m.location))
   ), [filteredMountains]);
 
   // Generate search suggestions based on unique locations
@@ -119,7 +119,7 @@ function Home() {
               Find your next <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600">adventure</span>
             </h1>
             <p className="text-lg text-gray-600 mb-8 max-w-2xl">
-              Discover amazing trails across CALABARZON and beyond. Start your journey today.
+              Discover amazing trails across LUZON and beyond. Start your journey today.
             </p>
             <div className="w-full max-w-2xl mb-8 relative">
               <div className="relative">
@@ -133,13 +133,13 @@ function Home() {
                   onChange={handleSearchChange}
                   onFocus={() => setShowSuggestions(true)}
                   onBlur={() => setTimeout(() => setShowSuggestions(false), 200)} // Delay to allow clicks on suggestions
-                  className="w-full border-2 border-gray-200 rounded-xl pl-12 pr-12 py-4 text-base focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-md hover:border-gray-300" 
+                  className="w-full border-2 border-gray-200 rounded-xl pl-12 pr-12 py-3 sm:py-4 text-base focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-md hover:border-gray-300 touch-manipulation" 
                   placeholder="Search by city, mountain name, or location..." 
                 />
                 {cityQuery && (
                   <button
                     onClick={clearSearch}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100 touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
                     aria-label="Clear search"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -151,12 +151,12 @@ function Home() {
               
               {/* Search Suggestions Dropdown */}
               {showSuggestions && searchSuggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto">
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto overscroll-contain">
                   {searchSuggestions.map((suggestion, index) => (
                     <button
                       key={index}
                       onClick={() => handleSuggestionClick(suggestion)}
-                      className="w-full px-6 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                      className="w-full px-6 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 touch-manipulation min-h-[44px] flex items-center"
                     >
                       <div className="flex items-center">
                         <span className="text-gray-400 mr-3">📍</span>
@@ -224,21 +224,21 @@ function Home() {
                 <div className="text-center">
                   <p className="text-gray-600">
                     Found <span className="font-semibold text-orange-600">{filteredMountains.length}</span> trail{filteredMountains.length !== 1 ? 's' : ''} 
-                    {filteredCalabarzon.length > 0 && filteredBeyond.length > 0 && (
-                      <span> ({filteredCalabarzon.length} in CALABARZON, {filteredBeyond.length} beyond)</span>
+                    {filteredLuzon.length > 0 && filteredBeyond.length > 0 && (
+                      <span> ({filteredLuzon.length} in LUZON, {filteredBeyond.length} beyond)</span>
                     )}
                   </p>
                 </div>
               )}
               
-              {/* CALABARZON Results */}
-              {filteredCalabarzon.length > 0 && (
+              {/* LUZON Results */}
+              {filteredLuzon.length > 0 && (
                 <div>
                   {cityQuery && (
-                    <h3 className="text-xl font-semibold text-gray-900 mb-4">CALABARZON Trails</h3>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-4">LUZON Trails</h3>
                   )}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {filteredCalabarzon.slice(0, cityQuery ? filteredCalabarzon.length : 4).map((mountain) => (
+                    {filteredLuzon.slice(0, cityQuery ? filteredLuzon.length : 4).map((mountain) => (
                       <div key={mountain.id} className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100">
                         <div className="relative h-44 bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 overflow-hidden">
                           {mountain.image_url ? (
@@ -246,6 +246,8 @@ function Home() {
                               src={mountain.image_url} 
                               alt={mountain.name} 
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              loading="lazy"
+                              decoding="async"
                             />
                           ) : (
                             <div className="absolute inset-0 flex items-center justify-center">
@@ -288,7 +290,7 @@ function Home() {
                           </div>
                           <button 
                             onClick={() => navigate(`/mountains/${mountain.id}`)}
-                            className="w-full px-4 py-2.5 rounded-lg text-white text-sm font-semibold bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200"
+                            className="w-full px-4 py-3 sm:py-2.5 rounded-lg text-white text-sm font-semibold bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 touch-manipulation min-h-[44px]"
                           >
                             Explore
                           </button>
@@ -299,11 +301,11 @@ function Home() {
                 </div>
               )}
               
-              {/* Beyond CALABARZON Results */}
+              {/* Beyond LUZON Results */}
               {filteredBeyond.length > 0 && (
                 <div>
                   {cityQuery && (
-                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Beyond CALABARZON</h3>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Beyond LUZON</h3>
                   )}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {filteredBeyond.slice(0, cityQuery ? filteredBeyond.length : 4).map((mountain) => (
@@ -314,6 +316,8 @@ function Home() {
                               src={mountain.image_url} 
                               alt={mountain.name} 
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              loading="lazy"
+                              decoding="async"
                             />
                           ) : (
                             <div className="absolute inset-0 flex items-center justify-center">
@@ -356,7 +360,7 @@ function Home() {
                           </div>
                           <button 
                             onClick={() => navigate(`/mountains/${mountain.id}`)}
-                            className="w-full px-4 py-2.5 rounded-lg text-white text-sm font-semibold bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200"
+                            className="w-full px-4 py-3 sm:py-2.5 rounded-lg text-white text-sm font-semibold bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 touch-manipulation min-h-[44px]"
                           >
                             Explore
                           </button>
@@ -371,7 +375,7 @@ function Home() {
           <div className="text-center mt-16">
             <a 
               href="/explore" 
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-base font-semibold bg-white border-2 border-gray-200 hover:border-orange-500 hover:text-orange-600 transition-all shadow-sm hover:shadow-lg hover:scale-105 group"
+              className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 rounded-full text-sm sm:text-base font-semibold bg-white border-2 border-gray-200 hover:border-orange-500 hover:text-orange-600 transition-all shadow-sm hover:shadow-lg hover:scale-105 group touch-manipulation min-h-[44px]"
             >
               <span>See more trails</span>
               <span className="group-hover:translate-x-1 transition-transform">→</span>
@@ -432,7 +436,7 @@ function Home() {
                   <div className="flex flex-wrap items-center gap-3">
                     <button
                       onClick={() => navigate('/guides')}
-                      className="px-6 py-3 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transition-all"
+                      className="px-6 py-3 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transition-all touch-manipulation min-h-[44px]"
                     >
                       Read more
                     </button>
