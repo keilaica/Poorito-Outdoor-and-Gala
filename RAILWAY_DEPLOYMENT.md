@@ -1,6 +1,8 @@
-# Railway Deployment Guide
+# Railway Deployment Guide (Detailed Reference)
 
-This guide will help you deploy the Poorito application to Railway.
+> **For a step-by-step tutorial, see [RAILWAY_SETUP_TUTORIAL.md](./RAILWAY_SETUP_TUTORIAL.md)**
+
+This guide provides detailed reference information for Railway deployment.
 
 ## Overview
 
