@@ -18,7 +18,7 @@ function MountainForm() {
   const [images, setImages] = useState([null, null, null, null, null]);
   const [thingsToBring, setThingsToBring] = useState(['']);
   const [hikeItinerary, setHikeItinerary] = useState([{ title: '', description: '', location: '', time: '' }]);
-  const [transportationGuides, setTransportationGuides] = useState([{ header: '', title: '', description: '' }]);
+  const [transportationGuides, setTransportationGuides] = useState([{ header: 'Public Transport', title: '', description: '' }]);
   const [fees, setFees] = useState({
     environmentalFee: '',
     registrationFee: '',
@@ -50,10 +50,26 @@ function MountainForm() {
           status: mountain.status || 'Single'
         });
         
-        // Load existing image if available
+        // Load existing images if available
+        const loadedImages = [null, null, null, null, null];
         if (mountain.image_url) {
-          setImages([mountain.image_url, null, null, null, null]);
+          loadedImages[0] = mountain.image_url;
+          console.log('Loaded main image');
         }
+        // Load additional images
+        if (mountain.additional_images && Array.isArray(mountain.additional_images)) {
+          console.log('Loading additional images:', mountain.additional_images.length);
+          mountain.additional_images.forEach((img, index) => {
+            if (index < 4) { // Max 4 additional images
+              loadedImages[index + 1] = img;
+              console.log(`Loaded additional image ${index + 1} to slot ${index + 1}`);
+            }
+          });
+        } else {
+          console.log('No additional_images found or not an array:', mountain.additional_images);
+        }
+        console.log('Final loaded images state:', loadedImages.map((img, i) => ({ slot: i, hasImage: !!img })));
+        setImages(loadedImages);
 
         // Load existing mountain details
         console.log('what_to_bring data:', mountain.what_to_bring);
@@ -83,7 +99,7 @@ function MountainForm() {
             description: item.item_description || ''
           }));
           console.log('Setting transportation guides:', transportItems);
-          setTransportationGuides(transportItems.length > 0 ? transportItems : [{ header: '', title: '', description: '' }]);
+          setTransportationGuides(transportItems.length > 0 ? transportItems : [{ header: 'Public Transport', title: '', description: '' }]);
         }
 
         console.log('budgeting data:', mountain.budgeting);
@@ -126,13 +142,31 @@ function MountainForm() {
   const handleImageChange = (index, event) => {
     const file = event.target.files[0];
     if (file) {
+      console.log(`Uploading image to slot ${index}:`, {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type
+      });
+      
       const reader = new FileReader();
       reader.onloadend = () => {
         const newImages = [...images];
         newImages[index] = reader.result;
         setImages(newImages);
+        console.log(`Image ${index} loaded successfully. Total images:`, {
+          slot: index,
+          hasImage: !!newImages[index],
+          imageLength: newImages[index] ? newImages[index].length : 0,
+          allImages: newImages.map((img, i) => ({ slot: i, hasImage: !!img }))
+        });
+      };
+      reader.onerror = (error) => {
+        console.error(`Error reading image ${index}:`, error);
+        setError(`Failed to load image: ${file.name}`);
       };
       reader.readAsDataURL(file);
+    } else {
+      console.log(`No file selected for slot ${index}`);
     }
   };
 
@@ -151,7 +185,12 @@ function MountainForm() {
   };
 
   const addTransportationGuide = () => {
-    setTransportationGuides([...transportationGuides, { header: '', title: '', description: '' }]);
+    setTransportationGuides([...transportationGuides, { header: 'Public Transport', title: '', description: '' }]);
+  };
+
+  const removeTransportationGuide = (index) => {
+    const newGuides = transportationGuides.filter((_, i) => i !== index);
+    setTransportationGuides(newGuides.length > 0 ? newGuides : [{ header: 'Public Transport', title: '', description: '' }]);
   };
 
   const handleInputChange = (field, value) => {
@@ -180,51 +219,7 @@ function MountainForm() {
         return;
       }
 
-      const mountainData = {
-        name: formData.name,
-        description: formData.description,
-        elevation: parseInt(formData.elevation),
-        location: formData.location,
-        difficulty: formData.difficulty,
-        image_url: images[0] // Send the first image as the main image
-      };
-
-      // Debug: Log the data being sent
-      console.log('Sending mountain data:', {
-        ...mountainData,
-        image_url: images[0] ? `${images[0].substring(0, 50)}...` : 'No image'
-      });
-
-      let mountainId;
-      if (isEdit) {
-        await apiService.updateMountain(id, mountainData);
-        mountainId = id;
-      } else {
-        const response = await apiService.createMountain(mountainData);
-        mountainId = response.mountain.id;
-      }
-
-      // Save mountain details
-      await saveMountainDetails(mountainId);
-
-      navigate('/admin/mountains', {
-        state: {
-          success: isEdit
-            ? 'Mountain updated successfully!'
-            : 'Mountain created successfully!'
-        }
-      });
-    } catch (err) {
-      console.error('Error saving mountain:', err);
-      setError('Failed to save mountain. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const saveMountainDetails = async (mountainId) => {
-    try {
-      // Prepare mountain details data for the new integrated system
+      // Prepare all mountain data including details in one call
       const mountainDetails = {
         what_to_bring: thingsToBring
           .filter(item => item.trim() !== '')
@@ -261,14 +256,130 @@ function MountainForm() {
           }))
       };
 
-      // Update the mountain with the details using the main mountain update endpoint
-      await apiService.updateMountain(mountainId, mountainDetails);
-      console.log('Mountain details saved successfully');
+      // Filter out null images and prepare additional images array
+      // Keep all images from slots 1-4 (indices 1-4), preserving order
+      const additionalImages = images.slice(1, 5).filter(img => img !== null && img !== undefined);
+      
+      console.log('Images state before save:', {
+        total: images.length,
+        main: images[0] ? 'Present' : 'Missing',
+        additional: additionalImages.length,
+        allSlots: images.map((img, idx) => ({
+          slot: idx,
+          hasImage: !!img,
+          isMain: idx === 0,
+          isAdditional: idx > 0 && idx < 5,
+          imageType: img ? (img.startsWith('data:') ? 'base64' : 'url') : 'null'
+        })),
+        additionalDetails: additionalImages.map((img, idx) => ({
+          index: idx + 1,
+          length: img ? img.length : 0,
+          preview: img ? img.substring(0, 50) + '...' : 'null',
+          startsWithData: img ? img.startsWith('data:') : false
+        }))
+      });
+      
+      // Validate that additional images are valid base64 strings
+      const invalidImages = additionalImages.filter(img => !img || !img.startsWith('data:'));
+      if (invalidImages.length > 0) {
+        console.warn('⚠️ Some additional images are not valid base64 strings:', invalidImages.length);
+      }
+      
+      const mountainData = {
+        name: formData.name,
+        description: formData.description,
+        elevation: parseInt(formData.elevation),
+        location: formData.location,
+        difficulty: formData.difficulty,
+        image_url: images[0] || null, // Send the first image as the main image
+        additional_images: additionalImages, // Send additional images as array (always an array, even if empty)
+        ...mountainDetails // Include all details in the same request
+      };
+      
+      // Final validation - ensure additional_images is always an array
+      if (!Array.isArray(mountainData.additional_images)) {
+        console.error('❌ ERROR: additional_images is not an array!', typeof mountainData.additional_images);
+        mountainData.additional_images = [];
+      }
+
+      // Debug: Log the data being sent
+      console.log('Sending mountain data:', {
+        ...mountainData,
+        image_url: images[0] ? `${images[0].substring(0, 50)}...` : 'No image',
+        additional_images_count: additionalImages.length,
+        additional_images_preview: additionalImages.map(img => img ? img.substring(0, 30) + '...' : 'null'),
+        rightSideImages: images.slice(1).map((img, idx) => ({
+          slot: idx + 1,
+          hasImage: !!img,
+          willBeSaved: !!img
+        }))
+      });
+      
+      // Validate that additional images are being sent
+      if (additionalImages.length > 0) {
+        console.log(`✅ ${additionalImages.length} additional image(s) will be saved to the database`);
+      } else {
+        console.log('ℹ️ No additional images to save (only main image will be saved)');
+      }
+
+      let mountainId;
+      if (isEdit) {
+        console.log('Calling updateMountain API...');
+        const response = await apiService.updateMountain(id, mountainData);
+        console.log('Update response:', response);
+        
+        // Verify the response includes the images
+        if (response && response.mountain) {
+          console.log('✅ Mountain updated! Response data:', {
+            id: response.mountain.id,
+            has_image_url: !!response.mountain.image_url,
+            additional_images_count: response.mountain.additional_images 
+              ? response.mountain.additional_images.length 
+              : 0,
+            additional_images: response.mountain.additional_images
+          });
+          
+          // Warn if images weren't saved
+          if (additionalImages.length > 0 && (!response.mountain.additional_images || response.mountain.additional_images.length === 0)) {
+            console.warn('⚠️ WARNING: Additional images were sent but not saved!');
+            console.warn('This usually means the database column does not exist.');
+            console.warn('Run this SQL in Supabase:');
+            console.warn('ALTER TABLE mountains ADD COLUMN IF NOT EXISTS additional_images JSONB DEFAULT \'[]\'::jsonb;');
+          }
+        }
+        mountainId = id;
+      } else {
+        const response = await apiService.createMountain(mountainData);
+        mountainId = response.mountain.id;
+      }
+
+      navigate('/admin/mountains', {
+        state: {
+          success: isEdit
+            ? `Mountain updated successfully! ${additionalImages.length > 0 ? `(${additionalImages.length} additional image${additionalImages.length > 1 ? 's' : ''} saved)` : ''}`
+            : 'Mountain created successfully!'
+        }
+      });
     } catch (err) {
-      console.error('Error saving mountain details:', err);
-      // Don't throw error here as the main mountain was saved successfully
+      console.error('❌ Error saving mountain:', err);
+      console.error('Error details:', err.message);
+      console.error('Full error:', err);
+      
+      // Check if error mentions database column
+      if (err.message && (err.message.includes('additional_images') || err.message.includes('column') || err.message.includes('does not exist'))) {
+        setError('Database column missing! Please run the migration SQL in Supabase first. Check browser console (F12) for the SQL command.');
+        console.error('⚠️ MIGRATION REQUIRED: Run this SQL in Supabase SQL Editor:');
+        console.error('ALTER TABLE mountains ADD COLUMN IF NOT EXISTS additional_images JSONB DEFAULT \'[]\'::jsonb;');
+        console.error('ALTER TABLE mountains ALTER COLUMN image_url TYPE TEXT;');
+      } else {
+        setError(err.message || 'Failed to save mountain. Please check console for details and try again.');
+      }
+    } finally {
+      setLoading(false);
     }
   };
+
+  // saveMountainDetails function removed - details are now saved in the main handleSave function
 
   if (loadingData) {
     return (
@@ -346,8 +457,15 @@ function MountainForm() {
               <div key={index + 1}>
                 <label htmlFor={`image-${index + 1}`} className="cursor-pointer">
                   {image ? (
-                    <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+                    <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden group">
                       <img src={image} alt={`Thumbnail ${index + 1}`} className="w-full h-full object-cover" />
+                      <button 
+                        className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity text-xs"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeImage(index + 1); }}
+                        type="button"
+                      >
+                        🗑️
+                      </button>
                     </div>
                   ) : (
                     <div className="aspect-video bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300 hover:border-primary transition-colors">
@@ -358,13 +476,24 @@ function MountainForm() {
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => handleImageChange(index + 1, e)}
+                  onChange={(e) => {
+                    handleImageChange(index + 1, e);
+                    // Reset input so same file can be selected again
+                    e.target.value = '';
+                  }}
                   className="hidden"
                   id={`image-${index + 1}`}
                 />
               </div>
             ))}
-            <div className="text-center text-sm text-gray-500 font-medium">3/5</div>
+            <div className="text-center text-sm text-gray-500 font-medium">
+              {images.filter(img => img !== null).length}/5
+              {images.slice(1).filter(img => img !== null).length > 0 && (
+                <div className="text-xs text-green-600 mt-1">
+                  {images.slice(1).filter(img => img !== null).length} additional image{images.slice(1).filter(img => img !== null).length > 1 ? 's' : ''} ready to save
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -534,17 +663,23 @@ function MountainForm() {
         <div className="space-y-6 pt-6 border-t">
           <h2 className="text-2xl font-bold text-gray-800 uppercase tracking-wide">Transportation Guide</h2>
           {transportationGuides.map((item, index) => (
-            <div key={index} className="space-y-3 p-6 bg-gray-50 rounded-lg">
+            <div key={index} className="space-y-3 p-6 bg-gray-50 rounded-lg relative">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-lg font-semibold text-gray-700">{item.title || 'Title'}</h3>
+                <button 
+                  onClick={() => removeTransportationGuide(index)}
+                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-all shadow-sm hover:shadow-md text-sm font-medium"
+                >
+                  Remove
+                </button>
+              </div>
               <input 
                 type="text" 
-                placeholder="Header" 
+                placeholder="Public Transport" 
                 value={item.header}
-                onChange={(e) => {
-                  const newGuides = [...transportationGuides];
-                  newGuides[index].header = e.target.value;
-                  setTransportationGuides(newGuides);
-                }}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all bg-white"
+                disabled
+                readOnly
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
               />
               <input 
                 type="text" 

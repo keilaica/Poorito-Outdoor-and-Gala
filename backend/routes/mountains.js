@@ -9,7 +9,7 @@ router.get('/', async (req, res) => {
   try {
     const { data: mountains, error } = await supabase
       .from('mountains')
-      .select('id, name, elevation, location, difficulty, description, image_url, created_at, updated_at')
+      .select('id, name, elevation, location, difficulty, description, image_url, additional_images, created_at, updated_at')
       .order('name', { ascending: true });
 
     if (error) {
@@ -73,7 +73,7 @@ router.get('/:id', async (req, res) => {
 // Create mountain (admin only) - temporarily without auth for testing
 router.post('/', async (req, res) => {
   try {
-    const { name, elevation, location, difficulty, description, image_url } = req.body;
+    const { name, elevation, location, difficulty, description, image_url, additional_images } = req.body;
     
     // Debug: Log received data
     console.log('Received mountain data:', {
@@ -82,7 +82,8 @@ router.post('/', async (req, res) => {
       location,
       difficulty,
       description,
-      image_url: image_url ? `${image_url.substring(0, 50)}...` : 'No image'
+      image_url: image_url ? `${image_url.substring(0, 50)}...` : 'No image',
+      additional_images_count: additional_images ? additional_images.length : 0
     });
 
     if (!name || !elevation || !location || !difficulty) {
@@ -98,6 +99,7 @@ router.post('/', async (req, res) => {
         difficulty,
         description,
         image_url,
+        additional_images: Array.isArray(additional_images) ? additional_images : [],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }])
@@ -133,6 +135,7 @@ router.put('/:id', async (req, res) => {
       difficulty, 
       description, 
       image_url,
+      additional_images,
       what_to_bring,
       budgeting,
       itinerary,
@@ -140,17 +143,54 @@ router.put('/:id', async (req, res) => {
     } = req.body;
 
     console.log('Attempting to update mountain:', id, { name, elevation, location });
+    console.log('Received additional_images:', {
+      isArray: Array.isArray(additional_images),
+      length: additional_images ? additional_images.length : 0,
+      firstImagePreview: additional_images && additional_images.length > 0 
+        ? additional_images[0].substring(0, 50) + '...' 
+        : 'none'
+    });
 
-    // Build update object with only provided fields
+    // Build update object with only provided fields (don't include undefined values)
     const updateData = {
-      name,
-      elevation,
-      location,
-      difficulty,
-      description,
-      image_url,
       updated_at: new Date().toISOString()
     };
+
+    // Only add fields if they are provided (not undefined)
+    if (name !== undefined) updateData.name = name;
+    if (elevation !== undefined) updateData.elevation = elevation;
+    if (location !== undefined) updateData.location = location;
+    if (difficulty !== undefined) updateData.difficulty = difficulty;
+    if (description !== undefined) updateData.description = description;
+    if (image_url !== undefined) updateData.image_url = image_url;
+    
+    // ALWAYS include additional_images - frontend always sends it
+    // Ensure it's always an array format for JSONB column
+    updateData.additional_images = Array.isArray(additional_images) 
+      ? additional_images 
+      : (additional_images === null || additional_images === undefined ? [] : []);
+    
+    console.log('Setting additional_images in update:', {
+      received: {
+        isArray: Array.isArray(additional_images),
+        type: typeof additional_images,
+        value: additional_images === null ? 'null' : (additional_images === undefined ? 'undefined' : 'has value'),
+        length: Array.isArray(additional_images) ? additional_images.length : 'N/A'
+      },
+      setting: {
+        count: updateData.additional_images.length,
+        isArray: Array.isArray(updateData.additional_images),
+        firstImagePreview: updateData.additional_images.length > 0 
+          ? updateData.additional_images[0].substring(0, 50) + '...'
+          : 'empty array'
+      }
+    });
+    
+    console.log('Update data being sent to database:', {
+      ...updateData,
+      image_url: updateData.image_url ? updateData.image_url.substring(0, 50) + '...' : 'none',
+      additional_images_count: updateData.additional_images ? updateData.additional_images.length : 0
+    });
 
     // Add JSONB columns if provided
     if (what_to_bring !== undefined) updateData.what_to_bring = what_to_bring;
@@ -166,13 +206,60 @@ router.put('/:id', async (req, res) => {
 
     if (error) {
       console.error('Update mountain error:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      
+      // Check if error is about missing column
+      if (error.message && error.message.includes('additional_images')) {
+        console.error('⚠️ CRITICAL: additional_images column does not exist!');
+        console.error('⚠️ Please run the migration SQL in Supabase:');
+        console.error('⚠️ ALTER TABLE mountains ADD COLUMN IF NOT EXISTS additional_images JSONB DEFAULT \'[]\'::jsonb;');
+        return res.status(500).json({ 
+          error: 'Database column missing',
+          message: 'The additional_images column does not exist. Please run the migration SQL first.',
+          details: error.message,
+          migration_sql: 'ALTER TABLE mountains ADD COLUMN IF NOT EXISTS additional_images JSONB DEFAULT \'[]\'::jsonb;'
+        });
+      }
+      
       return res.status(500).json({ 
         error: 'Failed to update mountain',
-        details: error.message
+        details: error.message,
+        code: error.code,
+        hint: error.hint
       });
     }
 
-    console.log('Mountain updated successfully:', updatedMountain);
+    const savedMountain = updatedMountain && updatedMountain.length > 0 ? updatedMountain[0] : null;
+    
+    console.log('Mountain updated successfully:', {
+      id: savedMountain ? savedMountain.id : 'unknown',
+      name: savedMountain ? savedMountain.name : 'unknown',
+      has_image_url: !!(savedMountain && savedMountain.image_url),
+      additional_images_sent: updateData.additional_images.length,
+      additional_images_saved: savedMountain && savedMountain.additional_images
+        ? savedMountain.additional_images.length 
+        : 0,
+      additional_images_type: savedMountain && savedMountain.additional_images
+        ? Array.isArray(savedMountain.additional_images) ? 'array' : typeof savedMountain.additional_images
+        : 'not found'
+    });
+    
+    // Verify images were saved correctly
+    if (updateData.additional_images.length > 0) {
+      const savedCount = savedMountain && savedMountain.additional_images && Array.isArray(savedMountain.additional_images)
+        ? savedMountain.additional_images.length
+        : 0;
+      
+      if (savedCount !== updateData.additional_images.length) {
+        console.error('⚠️ WARNING: Image count mismatch!', {
+          sent: updateData.additional_images.length,
+          saved: savedCount,
+          savedData: savedMountain ? savedMountain.additional_images : 'no mountain data'
+        });
+      } else {
+        console.log('✅ Additional images saved correctly:', savedCount);
+      }
+    }
 
     // Return the updated mountain data
     res.json({ 

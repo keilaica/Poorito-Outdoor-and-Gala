@@ -103,45 +103,55 @@ function UserDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-orange-50/30 to-slate-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading dashboard...</p>
+          <div className="relative">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-orange-200 border-t-orange-600 mx-auto mb-6"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-2xl">⛰️</span>
+            </div>
+          </div>
+          <p className="text-gray-700 font-semibold text-lg">Loading dashboard...</p>
+          <p className="text-gray-500 text-sm mt-2">Preparing your adventure</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-orange-50/30 to-slate-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
+      <div className="bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200/50 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
-              <img
-                src="/poorito-logo.jpg"
-                alt="Poorito"
-                className="w-10 h-10 rounded-full mr-3"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  const fallback = document.createElement('div');
-                  fallback.className = 'w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center mr-3';
-                  fallback.innerHTML = '<span class="text-white font-bold text-xs">P</span>';
-                  e.target.parentElement?.appendChild(fallback);
-                }}
-              />
-              <h1 className="text-2xl font-bold text-gray-900">Poorito</h1>
+            <div className="flex items-center group cursor-pointer" onClick={() => navigate('/')}>
+              <div className="relative">
+                <img
+                  src="/poorito-logo.jpg"
+                  alt="Poorito"
+                  className="w-12 h-12 rounded-xl mr-3 shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    const fallback = document.createElement('div');
+                    fallback.className = 'w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center mr-3 shadow-md group-hover:shadow-lg transition-all duration-300';
+                    fallback.innerHTML = '<span class="text-white font-bold text-sm">P</span>';
+                    e.target.parentElement?.appendChild(fallback);
+                  }}
+                />
+              </div>
+              <h1 className="text-2xl font-extrabold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent tracking-tight">
+                Poorito
+              </h1>
             </div>
             
             <div className="flex items-center space-x-4">
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">Welcome back!</p>
-                <p className="text-sm text-gray-600">{user?.username}</p>
+              <div className="hidden sm:block text-right">
+                <p className="text-sm font-semibold text-gray-900">Welcome back!</p>
+                <p className="text-sm text-gray-600 font-medium">{user?.username}</p>
               </div>
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                className="px-5 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-200 shadow-sm hover:shadow"
               >
                 Logout
               </button>
@@ -151,131 +161,167 @@ function UserDashboard() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Page Header */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">My Dashboard</h2>
-          <p className="text-gray-600">Manage your trail bookings and explore new adventures</p>
+        <div className="mb-10">
+          <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-3 tracking-tight">
+            My Dashboard
+          </h2>
+          <p className="text-lg text-gray-600 font-medium">
+            Manage your trail bookings and explore new adventures
+          </p>
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           <button
             onClick={() => navigate('/explore')}
-            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow text-left"
+            className="group bg-white rounded-2xl shadow-sm border border-gray-200 p-8 hover:shadow-xl hover:border-orange-200 transition-all duration-300 text-left transform hover:-translate-y-1"
           >
-            <div className="text-3xl mb-3">🗺️</div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Explore Trails</h3>
-            <p className="text-gray-600 text-sm">Discover new mountains and hiking trails</p>
+            <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+              <span className="text-2xl">🗺️</span>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+              Explore Trails
+            </h3>
+            <p className="text-gray-600 text-sm leading-relaxed">
+              Discover new mountains and hiking trails
+            </p>
           </button>
 
           <button
             onClick={() => navigate('/mountains')}
-            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow text-left"
+            className="group bg-white rounded-2xl shadow-sm border border-gray-200 p-8 hover:shadow-xl hover:border-green-200 transition-all duration-300 text-left transform hover:-translate-y-1"
           >
-            <div className="text-3xl mb-3">⛰️</div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">All Mountains</h3>
-            <p className="text-gray-600 text-sm">Browse all available mountains</p>
+            <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+              <span className="text-2xl">⛰️</span>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-green-600 transition-colors">
+              All Mountains
+            </h3>
+            <p className="text-gray-600 text-sm leading-relaxed">
+              Browse all available mountains
+            </p>
           </button>
 
           <button
             onClick={() => navigate('/guides')}
-            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow text-left"
+            className="group bg-white rounded-2xl shadow-sm border border-gray-200 p-8 hover:shadow-xl hover:border-purple-200 transition-all duration-300 text-left transform hover:-translate-y-1"
           >
-            <div className="text-3xl mb-3">📚</div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Hiking Guides</h3>
-            <p className="text-gray-600 text-sm">Learn tips and techniques</p>
+            <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+              <span className="text-2xl">📚</span>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-purple-600 transition-colors">
+              Hiking Guides
+            </h3>
+            <p className="text-gray-600 text-sm leading-relaxed">
+              Learn tips and techniques
+            </p>
           </button>
         </div>
 
         {/* Bookings Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">My Bookings</h3>
-            <p className="text-sm text-gray-600">Manage your trail bookings</p>
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200/50 overflow-hidden">
+          <div className="px-8 py-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+            <h3 className="text-2xl font-bold text-gray-900 mb-1">My Bookings</h3>
+            <p className="text-sm text-gray-600 font-medium">Manage your trail bookings</p>
           </div>
 
-          <div className="p-6">
+          <div className="p-8">
             {error && (
-              <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="mb-6 bg-red-50 border-l-4 border-red-500 rounded-lg p-4 shadow-sm">
                 <div className="flex items-center">
-                  <div className="text-red-500 mr-3">⚠️</div>
-                  <p className="text-red-800 text-sm">{error}</p>
+                  <div className="text-red-500 mr-3 text-xl">⚠️</div>
+                  <p className="text-red-800 text-sm font-medium">{error}</p>
                 </div>
               </div>
             )}
 
             {bookings.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">📅</div>
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">No Bookings Yet</h4>
-                <p className="text-gray-600 mb-6">Start exploring trails and book your first adventure!</p>
+              <div className="text-center py-16">
+                <div className="text-7xl mb-6 animate-bounce">📅</div>
+                <h4 className="text-2xl font-bold text-gray-900 mb-3">No Bookings Yet</h4>
+                <p className="text-gray-600 mb-8 text-lg">Start exploring trails and book your first adventure!</p>
                 <button
                   onClick={() => navigate('/explore')}
-                  className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-semibold"
+                  className="px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all duration-300 font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                   Explore Trails
                 </button>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {bookings.map((booking) => (
-                  <div key={booking.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-sm transition-shadow">
-                    <div className="flex items-start justify-between">
+                  <div 
+                    key={booking.id} 
+                    className="border border-gray-200 rounded-2xl p-6 hover:shadow-xl hover:border-orange-200 transition-all duration-300 bg-gradient-to-r from-white to-gray-50/50 group"
+                  >
+                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
                       <div className="flex-1">
-                        <div className="flex items-center mb-3">
+                        <div className="flex items-start gap-5 mb-4">
                           {booking.mountains?.image_url ? (
                             <img
                               src={booking.mountains.image_url}
                               alt={booking.mountains.name}
-                              className="w-16 h-16 rounded-lg object-cover mr-4"
+                              className="w-24 h-24 rounded-xl object-cover shadow-md group-hover:shadow-lg transition-shadow duration-300"
                             />
                           ) : (
-                            <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center mr-4">
-                              <span className="text-white text-2xl">⛰️</span>
+                            <div className="w-24 h-24 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow duration-300">
+                              <span className="text-white text-3xl">⛰️</span>
                             </div>
                           )}
-                          <div>
-                            <h4 className="text-lg font-semibold text-gray-900">{booking.mountains?.name}</h4>
-                            <p className="text-gray-600">{booking.mountains?.location}</p>
-                            <div className="flex items-center mt-1">
-                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(booking.status)}`}>
+                          <div className="flex-1">
+                            <h4 className="text-xl font-bold text-gray-900 mb-1 group-hover:text-orange-600 transition-colors">
+                              {booking.mountains?.name}
+                            </h4>
+                            <p className="text-gray-600 font-medium mb-3">{booking.mountains?.location}</p>
+                            <div className="flex items-center gap-3 flex-wrap">
+                              <span className={`px-3 py-1.5 text-xs font-bold rounded-full shadow-sm ${getStatusColor(booking.status)}`}>
                                 {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                               </span>
-                              <span className="ml-2 text-sm text-gray-500">
+                              <span className="text-sm text-gray-600 font-medium">
                                 {booking.mountains?.difficulty} • {booking.mountains?.elevation}m
                               </span>
                             </div>
                           </div>
                         </div>
                         
-                        <div className="text-sm text-gray-600">
-                          <p><strong>Booking Date:</strong> {formatDate(booking.booking_date)}</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-gray-700 bg-white/60 rounded-xl p-4 border border-gray-100">
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-400">📅</span>
+                            <span><strong className="text-gray-900">Booking Date:</strong> {formatDate(booking.booking_date)}</span>
+                          </div>
                           {booking.number_of_participants && (
-                            <p><strong>Participants:</strong> {booking.number_of_participants} {booking.number_of_participants === 1 ? 'person' : 'people'}</p>
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-400">👥</span>
+                              <span><strong className="text-gray-900">Participants:</strong> {booking.number_of_participants} {booking.number_of_participants === 1 ? 'person' : 'people'}</span>
+                            </div>
                           )}
-                          <p><strong>Booked On:</strong> {formatDate(booking.created_at)}</p>
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-400">🕐</span>
+                            <span><strong className="text-gray-900">Booked On:</strong> {formatDate(booking.created_at)}</span>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="flex flex-col space-y-2">
+                      <div className="flex flex-col gap-3 lg:min-w-[180px]">
                         <button
                           onClick={() => navigate(`/receipt/${booking.id}`)}
-                          className="px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors"
+                          className="px-5 py-3 text-sm font-semibold text-blue-700 bg-blue-50 border-2 border-blue-200 rounded-xl hover:bg-blue-100 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
                         >
                           📄 View Receipt
                         </button>
                         {booking.status === 'confirmed' && (
                           <button
                             onClick={() => openCancelModal(booking)}
-                            className="px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 transition-colors"
+                            className="px-5 py-3 text-sm font-semibold text-red-700 bg-red-50 border-2 border-red-200 rounded-xl hover:bg-red-100 hover:border-red-300 transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
                           >
                             Cancel Booking
                           </button>
                         )}
                         <button
                           onClick={() => navigate(`/mountain/${booking.mountain_id}`)}
-                          className="px-4 py-2 text-sm font-medium text-orange-700 bg-orange-50 border border-orange-200 rounded-md hover:bg-orange-100 transition-colors"
+                          className="px-5 py-3 text-sm font-semibold text-orange-700 bg-orange-50 border-2 border-orange-200 rounded-xl hover:bg-orange-100 hover:border-orange-300 transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
                         >
                           View Details
                         </button>
@@ -290,47 +336,48 @@ function UserDashboard() {
 
         {/* Cancel Booking Modal */}
         {showCancelModal && bookingToCancel && (
-          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
-              <div className="flex items-start justify-between mb-4">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 transform transition-all animate-scaleIn">
+              <div className="flex items-start justify-between mb-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Cancel booking?</h3>
-                  <p className="mt-1 text-sm text-gray-600">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Cancel booking?</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">
                     This will free up your slot on this trail and cannot be undone.
                   </p>
                 </div>
                 <button
                   onClick={closeCancelModal}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-gray-400 hover:text-gray-600 transition-colors text-2xl font-light hover:bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center"
                   aria-label="Close"
                 >
                   ✕
                 </button>
               </div>
 
-              <div className="mb-6 rounded-lg bg-gray-50 border border-gray-200 p-4 text-sm text-gray-700">
-                <p className="font-semibold text-gray-900 mb-1">
+              <div className="mb-8 rounded-xl bg-gradient-to-br from-gray-50 to-white border-2 border-gray-200 p-5 shadow-sm">
+                <p className="font-bold text-lg text-gray-900 mb-3">
                   {bookingToCancel.mountains?.name || 'Selected trail'}
                 </p>
-                <p>
-                  <span className="font-medium">Booking Date:</span>{' '}
-                  {formatDate(bookingToCancel.booking_date)}
-                </p>
-                {bookingToCancel.number_of_participants && (
-                  <p className="mt-1">
-                    <span className="font-medium">Participants:</span>{' '}
-                    {bookingToCancel.number_of_participants}{' '}
-                    {bookingToCancel.number_of_participants === 1 ? 'person' : 'people'}
+                <div className="space-y-2 text-sm text-gray-700">
+                  <p className="flex items-center gap-2">
+                    <span className="text-gray-400">📅</span>
+                    <span><span className="font-semibold text-gray-900">Booking Date:</span> {formatDate(bookingToCancel.booking_date)}</span>
                   </p>
-                )}
+                  {bookingToCancel.number_of_participants && (
+                    <p className="flex items-center gap-2">
+                      <span className="text-gray-400">👥</span>
+                      <span><span className="font-semibold text-gray-900">Participants:</span> {bookingToCancel.number_of_participants} {bookingToCancel.number_of_participants === 1 ? 'person' : 'people'}</span>
+                    </p>
+                  )}
+                </div>
               </div>
 
-              <div className="flex justify-end space-x-3">
+              <div className="flex justify-end gap-3">
                 <button
                   type="button"
                   onClick={closeCancelModal}
                   disabled={cancelLoading}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  className="px-6 py-3 text-sm font-semibold text-gray-700 bg-white border-2 border-gray-300 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 disabled:opacity-50 shadow-sm hover:shadow-md"
                 >
                   Keep Booking
                 </button>
@@ -338,9 +385,16 @@ function UserDashboard() {
                   type="button"
                   onClick={handleConfirmCancel}
                   disabled={cancelLoading}
-                  className="px-4 py-2 text-sm font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-60"
+                  className="px-6 py-3 text-sm font-bold text-white bg-gradient-to-r from-red-600 to-red-700 rounded-xl hover:from-red-700 hover:to-red-800 transition-all duration-200 disabled:opacity-60 shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
-                  {cancelLoading ? 'Cancelling...' : 'Yes, Cancel Booking'}
+                  {cancelLoading ? (
+                    <span className="flex items-center gap-2">
+                      <span className="animate-spin">⏳</span>
+                      Cancelling...
+                    </span>
+                  ) : (
+                    'Yes, Cancel Booking'
+                  )}
                 </button>
               </div>
             </div>

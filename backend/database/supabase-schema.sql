@@ -22,7 +22,8 @@ CREATE TABLE IF NOT EXISTS mountains (
     location VARCHAR(100) NOT NULL,
     difficulty TEXT CHECK (difficulty IN ('Easy', 'Moderate', 'Hard', 'Expert')) NOT NULL,
     description TEXT,
-    image_url VARCHAR(500),
+    image_url TEXT,
+    additional_images JSONB DEFAULT '[]'::jsonb,
     
     -- What to bring section (stored as JSON array)
     what_to_bring JSONB DEFAULT '[]'::jsonb,

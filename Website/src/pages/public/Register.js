@@ -13,6 +13,21 @@ function Register() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Password requirements validation
+  const validatePassword = (password) => {
+    return {
+      minLength: password.length >= 8,
+      hasUpperCase: /[A-Z]/.test(password),
+      hasLowerCase: /[a-z]/.test(password),
+      hasNumber: /[0-9]/.test(password),
+      hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+    };
+  };
+
+  const passwordRequirements = validatePassword(formData.password);
+  const isPasswordValid = Object.values(passwordRequirements).every(req => req === true);
+  const passwordsMatch = formData.password === formData.confirmPassword && formData.confirmPassword !== '';
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -27,14 +42,14 @@ function Register() {
     setError('');
 
     // Validation
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+    if (!isPasswordValid) {
+      setError('Password does not meet all requirements');
       setLoading(false);
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
       setLoading(false);
       return;
     }
@@ -137,9 +152,43 @@ function Register() {
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all ${
+                  formData.password && !isPasswordValid
+                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                    : formData.password && isPasswordValid
+                    ? 'border-green-300'
+                    : 'border-gray-300'
+                }`}
                 placeholder="Enter your password"
               />
+              {/* Password Requirements */}
+              {formData.password && (
+                <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <p className="text-xs font-semibold text-gray-700 mb-2">Password Requirements:</p>
+                  <ul className="space-y-1 text-xs">
+                    <li className={`flex items-center ${passwordRequirements.minLength ? 'text-green-600' : 'text-gray-500'}`}>
+                      <span className="mr-2">{passwordRequirements.minLength ? '✓' : '○'}</span>
+                      At least 8 characters
+                    </li>
+                    <li className={`flex items-center ${passwordRequirements.hasUpperCase ? 'text-green-600' : 'text-gray-500'}`}>
+                      <span className="mr-2">{passwordRequirements.hasUpperCase ? '✓' : '○'}</span>
+                      One uppercase letter
+                    </li>
+                    <li className={`flex items-center ${passwordRequirements.hasLowerCase ? 'text-green-600' : 'text-gray-500'}`}>
+                      <span className="mr-2">{passwordRequirements.hasLowerCase ? '✓' : '○'}</span>
+                      One lowercase letter
+                    </li>
+                    <li className={`flex items-center ${passwordRequirements.hasNumber ? 'text-green-600' : 'text-gray-500'}`}>
+                      <span className="mr-2">{passwordRequirements.hasNumber ? '✓' : '○'}</span>
+                      One number
+                    </li>
+                    <li className={`flex items-center ${passwordRequirements.hasSpecialChar ? 'text-green-600' : 'text-gray-500'}`}>
+                      <span className="mr-2">{passwordRequirements.hasSpecialChar ? '✓' : '○'}</span>
+                      One special character (!@#$%^&*...)
+                    </li>
+                  </ul>
+                </div>
+              )}
             </div>
 
             <div>
@@ -153,16 +202,38 @@ function Register() {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all ${
+                  formData.confirmPassword && !passwordsMatch
+                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                    : formData.confirmPassword && passwordsMatch
+                    ? 'border-green-300 focus:border-green-500 focus:ring-green-500'
+                    : 'border-gray-300 focus:ring-orange-500 focus:border-orange-500'
+                }`}
                 placeholder="Confirm your password"
               />
+              {/* Password Match Indicator */}
+              {formData.confirmPassword && (
+                <div className="mt-2">
+                  {passwordsMatch ? (
+                    <p className="text-xs text-green-600 flex items-center">
+                      <span className="mr-1">✓</span>
+                      Passwords match
+                    </p>
+                  ) : (
+                    <p className="text-xs text-red-600 flex items-center">
+                      <span className="mr-1">✗</span>
+                      Passwords do not match
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !isPasswordValid || !passwordsMatch}
               className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition-all ${
-                loading
+                loading || !isPasswordValid || !passwordsMatch
                   ? 'bg-gray-400 cursor-not-allowed'
                   : 'bg-orange-500 hover:bg-orange-600 shadow-lg hover:shadow-xl'
               }`}

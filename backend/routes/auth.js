@@ -16,6 +16,21 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Username, email, and password are required' });
     }
 
+    // Validate password requirements
+    const passwordRequirements = {
+      minLength: password.length >= 8,
+      hasUpperCase: /[A-Z]/.test(password),
+      hasLowerCase: /[a-z]/.test(password),
+      hasNumber: /[0-9]/.test(password),
+      hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+    };
+
+    if (!Object.values(passwordRequirements).every(req => req === true)) {
+      return res.status(400).json({ 
+        error: 'Password does not meet requirements. Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.' 
+      });
+    }
+
     // Check if user already exists - check email and username separately
     const { data: existingByEmail, error: emailError } = await supabase
       .from('users')
@@ -315,8 +330,19 @@ router.post('/reset-password', async (req, res) => {
       return res.status(400).json({ error: 'Token and password are required' });
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+    // Validate password requirements
+    const passwordRequirements = {
+      minLength: password.length >= 8,
+      hasUpperCase: /[A-Z]/.test(password),
+      hasLowerCase: /[a-z]/.test(password),
+      hasNumber: /[0-9]/.test(password),
+      hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+    };
+
+    if (!Object.values(passwordRequirements).every(req => req === true)) {
+      return res.status(400).json({ 
+        error: 'Password does not meet requirements. Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.' 
+      });
     }
 
     // Verify token

@@ -69,10 +69,25 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 
   // Start background jobs
   scheduleBookingCleanup();
+});
+
+// Handle server errors gracefully
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`❌ Port ${PORT} is already in use.`);
+    console.error(`Please stop the process using port ${PORT} or use a different port.`);
+    console.error(`On Windows, you can find and kill the process with:`);
+    console.error(`  netstat -ano | findstr :${PORT}`);
+    console.error(`  taskkill /PID <PID> /F`);
+    process.exit(1);
+  } else {
+    console.error('Server error:', err);
+    process.exit(1);
+  }
 });

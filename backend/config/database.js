@@ -36,12 +36,34 @@ const testConnection = async () => {
       .select('id', { count: 'exact', head: true });
     
     if (error) {
-      console.error('Error connecting to Supabase:', error.message);
+      // Supabase errors can have message, code, details, hint, etc.
+      const errorDetails = {
+        message: error.message || '(no message)',
+        code: error.code || '(no code)',
+        details: error.details || '(no details)',
+        hint: error.hint || '(no hint)'
+      };
+      // Only show properties that have actual values
+      const relevantDetails = Object.entries(errorDetails)
+        .filter(([_, value]) => value !== '(no message)' && value !== '(no code)' && value !== '(no details)' && value !== '(no hint)')
+        .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
+      
+      if (Object.keys(relevantDetails).length > 0) {
+        console.error('Error connecting to Supabase:', JSON.stringify(relevantDetails, null, 2));
+      } else {
+        console.error('Error connecting to Supabase:', JSON.stringify(error, null, 2));
+      }
       return;
     }
     console.log('✅ Connected to Supabase database');
   } catch (err) {
-    console.error('Supabase connection error:', err.message);
+    // Log full error details for unexpected errors
+    const errorDetails = {
+      message: err.message || '(no message)',
+      code: err.code || '(no code)',
+      stack: err.stack || '(no stack)'
+    };
+    console.error('Supabase connection error:', JSON.stringify(errorDetails, null, 2));
   }
 };
 

@@ -313,11 +313,23 @@ function MountainDetail() {
                 
                 {/* Thumbnail Images */}
                 <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="aspect-video rounded-lg overflow-hidden bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                      <span className="text-2xl text-gray-500">⛰️</span>
-                    </div>
-                  ))}
+                  {mountain.additional_images && mountain.additional_images.length > 0 ? (
+                    mountain.additional_images.slice(0, 3).map((img, index) => (
+                      <div key={index} className="aspect-video rounded-lg overflow-hidden shadow-md bg-gradient-to-br from-gray-200 to-gray-300">
+                        <img 
+                          src={img} 
+                          alt={`${mountain.name} - Image ${index + 2}`} 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))
+                  ) : (
+                    [1, 2, 3].map((i) => (
+                      <div key={i} className="aspect-video rounded-lg overflow-hidden bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                        <span className="text-2xl text-gray-500">⛰️</span>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>

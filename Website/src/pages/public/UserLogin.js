@@ -120,6 +120,15 @@ function UserLogin() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
                 placeholder="Enter your password"
               />
+              {/* Password Requirements Info */}
+              <div className="mt-2 p-2 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-xs text-blue-800 font-semibold mb-1">Password Requirements:</p>
+                <ul className="text-xs text-blue-700 space-y-0.5">
+                  <li>• At least 8 characters</li>
+                  <li>• One uppercase and one lowercase letter</li>
+                  <li>• One number and one special character</li>
+                </ul>
+              </div>
             </div>
 
             <button
