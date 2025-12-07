@@ -174,10 +174,13 @@ function PublicLayout() {
                     </div>
                     <Link
                       to="/dashboard"
+                      state={{ from: location.pathname }}
                       className="block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors touch-manipulation min-h-[44px] flex items-center"
                       onClick={() => {
                         setShowUserMenu(false);
                         scrollToTop();
+                        // Store current page as previous page
+                        localStorage.setItem('previousPage', location.pathname);
                       }}
                     >
                       📊 Dashboard

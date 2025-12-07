@@ -63,8 +63,8 @@ function Register() {
         apiService.setToken(response.token);
         localStorage.setItem('user', JSON.stringify(response.user));
         
-        // Redirect to user dashboard
-        navigate('/dashboard');
+        // Redirect to home page
+        navigate('/');
       }
     } catch (err) {
       console.error('Registration error:', err);

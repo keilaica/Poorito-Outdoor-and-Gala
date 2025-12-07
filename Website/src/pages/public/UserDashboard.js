@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import apiService from '../../services/api';
 
 function UserDashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -11,11 +12,21 @@ function UserDashboard() {
   const [bookingToCancel, setBookingToCancel] = useState(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
+  const [previousPage, setPreviousPage] = useState(null);
 
   useEffect(() => {
     checkAuth();
     fetchBookings();
-  }, []);
+    
+    // Get previous page from location state or localStorage
+    const storedPreviousPage = localStorage.getItem('previousPage');
+    if (location.state?.from) {
+      setPreviousPage(location.state.from);
+      localStorage.setItem('previousPage', location.state.from);
+    } else if (storedPreviousPage) {
+      setPreviousPage(storedPreviousPage);
+    }
+  }, [location.state]);
 
   const checkAuth = () => {
     const userData = localStorage.getItem('user');
@@ -77,7 +88,21 @@ function UserDashboard() {
   const handleLogout = () => {
     apiService.logout();
     localStorage.removeItem('user');
+    localStorage.removeItem('previousPage');
     navigate('/');
+  };
+
+  const handleGoBack = () => {
+    // Try to use router history first
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else if (previousPage) {
+      // Use stored previous page
+      navigate(previousPage);
+    } else {
+      // Default fallback to explore trails
+      navigate('/explore');
+    }
   };
 
   const formatDate = (dateString) => {
@@ -176,6 +201,25 @@ function UserDashboard() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {/* Go Back Button - Mobile-friendly */}
+        <div className="mb-6">
+          <button
+            onClick={handleGoBack}
+            className="flex items-center gap-2 text-gray-600 hover:text-orange-600 transition-colors text-sm sm:text-base font-medium group touch-manipulation min-h-[44px] px-2 -ml-2 rounded-lg hover:bg-gray-50 active:bg-gray-100"
+            aria-label="Go back to previous page"
+          >
+            <svg 
+              className="w-5 h-5 sm:w-6 sm:h-6 transform group-hover:-translate-x-1 transition-transform" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span className="whitespace-nowrap">Go Back</span>
+          </button>
+        </div>
+
         {/* Page Header */}
         <div className="mb-10">
           <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-3 tracking-tight">
@@ -184,54 +228,6 @@ function UserDashboard() {
           <p className="text-lg text-gray-600 font-medium">
             Manage your trail bookings and explore new adventures
           </p>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <button
-            onClick={() => navigate('/explore')}
-            className="group bg-white rounded-2xl shadow-sm border border-gray-200 p-8 hover:shadow-xl hover:border-orange-200 transition-all duration-300 text-left transform hover:-translate-y-1"
-          >
-            <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-              <span className="text-2xl">🗺️</span>
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
-              Explore Trails
-            </h3>
-            <p className="text-gray-600 text-sm leading-relaxed">
-              Discover new mountains and hiking trails
-            </p>
-          </button>
-
-          <button
-            onClick={() => navigate('/mountains')}
-            className="group bg-white rounded-2xl shadow-sm border border-gray-200 p-8 hover:shadow-xl hover:border-green-200 transition-all duration-300 text-left transform hover:-translate-y-1"
-          >
-            <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-              <span className="text-2xl">⛰️</span>
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-green-600 transition-colors">
-              All Mountains
-            </h3>
-            <p className="text-gray-600 text-sm leading-relaxed">
-              Browse all available mountains
-            </p>
-          </button>
-
-          <button
-            onClick={() => navigate('/guides')}
-            className="group bg-white rounded-2xl shadow-sm border border-gray-200 p-8 hover:shadow-xl hover:border-purple-200 transition-all duration-300 text-left transform hover:-translate-y-1"
-          >
-            <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-              <span className="text-2xl">📚</span>
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-purple-600 transition-colors">
-              Hiking Guides
-            </h3>
-            <p className="text-gray-600 text-sm leading-relaxed">
-              Learn tips and techniques
-            </p>
-          </button>
         </div>
 
         {/* Bookings Section */}

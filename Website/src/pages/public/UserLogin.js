@@ -36,7 +36,15 @@ function UserLogin() {
         if (response.user.role === 'admin') {
           navigate('/admin');
         } else {
-          navigate('/dashboard');
+          // Check if there's a stored redirect path (e.g., from token expiration)
+          const redirectPath = sessionStorage.getItem('redirectAfterLogin');
+          if (redirectPath) {
+            sessionStorage.removeItem('redirectAfterLogin');
+            navigate(redirectPath);
+          } else {
+            // Default to home page after login
+            navigate('/');
+          }
         }
       }
     } catch (err) {

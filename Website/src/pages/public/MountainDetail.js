@@ -33,6 +33,8 @@ function MountainDetail() {
   const [toastMessage, setToastMessage] = useState('');
   const [userBookings, setUserBookings] = useState([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
     fetchMountain();
@@ -206,6 +208,133 @@ function MountainDetail() {
   };
 
   // Calculate pricing based on booking type and trip duration
+  // Get all images for the mountain (main image + additional images)
+  const getAllImages = () => {
+    if (!mountain) return [];
+    const images = [];
+    if (mountain.image_url) {
+      images.push(mountain.image_url);
+    }
+    if (mountain.additional_images && Array.isArray(mountain.additional_images)) {
+      images.push(...mountain.additional_images);
+    }
+    return images;
+  };
+
+  // Open image viewer
+  const openImageViewer = (index) => {
+    const images = getAllImages();
+    if (images.length === 0) return;
+    // Ensure index is within bounds
+    const safeIndex = Math.max(0, Math.min(index, images.length - 1));
+    setCurrentImageIndex(safeIndex);
+    setIsViewerOpen(true);
+    // Prevent body scroll when viewer is open
+    document.body.style.overflow = 'hidden';
+  };
+
+  // Close image viewer
+  const closeImageViewer = () => {
+    setIsViewerOpen(false);
+    document.body.style.overflow = 'unset';
+  };
+
+  // Cleanup: restore body overflow when component unmounts or viewer closes
+  useEffect(() => {
+    if (!isViewerOpen) {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isViewerOpen]);
+
+  // Navigate to previous image
+  const goToPreviousImage = () => {
+    const images = getAllImages();
+    if (images.length === 0) return;
+    setCurrentImageIndex((prevIndex) => 
+      prevIndex === 0 ? images.length - 1 : prevIndex - 1
+    );
+  };
+
+  // Navigate to next image
+  const goToNextImage = () => {
+    const images = getAllImages();
+    if (images.length === 0) return;
+    setCurrentImageIndex((prevIndex) => 
+      prevIndex === images.length - 1 ? 0 : prevIndex + 1
+    );
+  };
+
+  // Keyboard navigation
+  useEffect(() => {
+    if (!isViewerOpen) return;
+
+    const handleKeyDown = (e) => {
+      const images = getAllImages();
+      if (images.length === 0) return;
+
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        setCurrentImageIndex((prevIndex) => 
+          prevIndex === 0 ? images.length - 1 : prevIndex - 1
+        );
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        setCurrentImageIndex((prevIndex) => 
+          prevIndex === images.length - 1 ? 0 : prevIndex + 1
+        );
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        closeImageViewer();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isViewerOpen, currentImageIndex, mountain]);
+
+  // Touch/swipe handlers for mobile
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
+      const images = getAllImages();
+      if (images.length > 0) {
+        setCurrentImageIndex((prevIndex) => 
+          prevIndex === images.length - 1 ? 0 : prevIndex + 1
+        );
+      }
+    } else if (isRightSwipe) {
+      const images = getAllImages();
+      if (images.length > 0) {
+        setCurrentImageIndex((prevIndex) => 
+          prevIndex === 0 ? images.length - 1 : prevIndex - 1
+        );
+      }
+    }
+  };
+
   const calculatePricing = () => {
     if (!mountain) return { joinerPricePerHead: 0, exclusivePrice: 0, totalPrice: 0 };
 
@@ -527,7 +656,15 @@ function MountainDetail() {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {/* Main Image */}
                 <div className="md:col-span-3">
-                  <div className="aspect-video rounded-2xl overflow-hidden shadow-xl bg-gradient-to-br from-orange-500 to-orange-700">
+                  <div 
+                    className="aspect-video rounded-2xl overflow-hidden shadow-xl bg-gradient-to-br from-orange-500 to-orange-700 cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={() => {
+                      const images = getAllImages();
+                      if (images.length > 0) {
+                        openImageViewer(0);
+                      }
+                    }}
+                  >
                     {mountain.image_url ? (
                       <img 
                         src={mountain.image_url} 
@@ -550,17 +687,29 @@ function MountainDetail() {
                 {/* Thumbnail Images */}
                 <div className="space-y-4">
                   {mountain.additional_images && mountain.additional_images.length > 0 ? (
-                    mountain.additional_images.slice(0, 3).map((img, index) => (
-                      <div key={index} className="aspect-video rounded-lg overflow-hidden shadow-md bg-gradient-to-br from-gray-200 to-gray-300">
-                        <img 
-                          src={img} 
-                          alt={`${mountain.name} - Image ${index + 2}`} 
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                          decoding="async"
-                        />
-                      </div>
-                    ))
+                    mountain.additional_images.slice(0, 3).map((img, index) => {
+                      const images = getAllImages();
+                      const imageIndex = index + 1; // +1 because main image is at index 0
+                      return (
+                        <div 
+                          key={index} 
+                          className="aspect-video rounded-lg overflow-hidden shadow-md bg-gradient-to-br from-gray-200 to-gray-300 cursor-pointer hover:opacity-90 transition-opacity"
+                          onClick={() => {
+                            if (images.length > imageIndex) {
+                              openImageViewer(imageIndex);
+                            }
+                          }}
+                        >
+                          <img 
+                            src={img} 
+                            alt={`${mountain.name} - Image ${index + 2}`} 
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        </div>
+                      );
+                    })
                   ) : (
                     [1, 2, 3].map((i) => (
                       <div key={i} className="aspect-video rounded-lg overflow-hidden bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
@@ -1673,6 +1822,103 @@ function MountainDetail() {
           </div>
         </div>
       )}
+
+      {/* Facebook-Style Full-Screen Image Viewer */}
+      {isViewerOpen && (() => {
+        const images = getAllImages();
+        if (images.length === 0) {
+          closeImageViewer();
+          return null;
+        }
+        // Ensure currentImageIndex is within bounds
+        const safeIndex = Math.max(0, Math.min(currentImageIndex, images.length - 1));
+        if (safeIndex !== currentImageIndex) {
+          setCurrentImageIndex(safeIndex);
+          return null; // Return null to prevent render with wrong index
+        }
+        const currentImage = images[safeIndex];
+        const hasMultipleImages = images.length > 1;
+
+        return (
+          <div 
+            className="fixed inset-0 z-[200] flex items-center justify-center animate-fadeIn"
+            style={{ backgroundColor: 'rgba(0, 0, 0, 0.8)' }}
+            onClick={(e) => {
+              // Close when clicking outside the image
+              if (e.target === e.currentTarget) {
+                closeImageViewer();
+              }
+            }}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+          >
+            {/* Close Button */}
+            <button
+              onClick={closeImageViewer}
+              className="absolute top-4 right-4 z-10 w-10 h-10 sm:w-12 sm:h-12 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white transition-all duration-300 hover:scale-110 touch-manipulation"
+              aria-label="Close image viewer"
+            >
+              <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Left Arrow - Previous Image */}
+            {hasMultipleImages && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goToPreviousImage();
+                }}
+                className="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 z-10 w-12 h-12 sm:w-14 sm:h-14 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white transition-all duration-300 hover:scale-110 touch-manipulation"
+                aria-label="Previous image"
+              >
+                <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+            )}
+
+            {/* Center Image */}
+            <div className="relative max-w-[95vw] max-h-[95vh] w-full h-full flex items-center justify-center p-4 sm:p-8">
+              <img
+                key={safeIndex}
+                src={currentImage}
+                alt={`${mountain.name} - Image ${safeIndex + 1}`}
+                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl opacity-0 transition-opacity duration-300"
+                onLoad={(e) => {
+                  e.target.style.opacity = '1';
+                }}
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+
+            {/* Right Arrow - Next Image */}
+            {hasMultipleImages && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goToNextImage();
+                }}
+                className="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 z-10 w-12 h-12 sm:w-14 sm:h-14 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white transition-all duration-300 hover:scale-110 touch-manipulation"
+                aria-label="Next image"
+              >
+                <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            )}
+
+            {/* Image Counter */}
+            {hasMultipleImages && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 text-white text-sm font-medium">
+                {safeIndex + 1} / {images.length}
+              </div>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }

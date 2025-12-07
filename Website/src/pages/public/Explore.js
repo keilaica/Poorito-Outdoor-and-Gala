@@ -1,9 +1,22 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import apiService from '../../services/api';
 
 // Mountain Card Component
-const MountainCard = ({ mountain, viewMode, onExplore }) => {
+const MountainCard = ({ mountain, viewMode }) => {
+  const navigate = useNavigate();
+  
+  const handleCardClick = () => {
+    // Navigate to mountain details page
+    navigate(`/mountains/${mountain.id}`);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleCardClick();
+    }
+  };
   const getDifficultyColor = (difficulty) => {
     switch (difficulty?.toLowerCase()) {
       case 'easy':
@@ -36,7 +49,15 @@ const MountainCard = ({ mountain, viewMode, onExplore }) => {
 
   if (viewMode === 'list') {
     return (
-      <div className="bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 group">
+      <div 
+        className="bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-200 group cursor-pointer"
+        onClick={handleCardClick}
+        onKeyDown={handleKeyDown}
+        tabIndex={0}
+        role="button"
+        aria-label={`View details for ${mountain.name}`}
+        style={{ transition: 'transform 200ms, box-shadow 200ms' }}
+      >
         <div className="flex flex-col md:flex-row">
           {/* Image */}
           <div className="md:w-96 h-56 md:h-auto bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 overflow-hidden relative">
@@ -110,15 +131,18 @@ const MountainCard = ({ mountain, viewMode, onExplore }) => {
               </div>
               
               <div className="flex flex-col gap-3 min-w-[140px]">
-                <button 
-                  onClick={onExplore}
-                  className="px-6 py-3 rounded-xl text-white text-sm font-semibold bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 whitespace-nowrap touch-manipulation min-h-[44px]"
-                >
-                  View Details
-                </button>
                 <div className="text-xs text-gray-500 text-center">
                   Added {new Date(mountain.created_at).toLocaleDateString()}
                 </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCardClick();
+                  }}
+                  className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 touch-manipulation min-h-[44px]"
+                >
+                  Explore Trail
+                </button>
               </div>
             </div>
           </div>
@@ -129,7 +153,15 @@ const MountainCard = ({ mountain, viewMode, onExplore }) => {
 
   // Grid view
   return (
-    <div className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 flex flex-col h-full">
+    <div 
+      className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-200 border border-gray-100 flex flex-col h-full cursor-pointer"
+      onClick={handleCardClick}
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+      role="button"
+      aria-label={`View details for ${mountain.name}`}
+      style={{ transition: 'transform 200ms, box-shadow 200ms' }}
+    >
       <div className="relative h-56 bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 overflow-hidden flex-shrink-0">
         {mountain.image_url ? (
           <img 
@@ -170,9 +202,12 @@ const MountainCard = ({ mountain, viewMode, onExplore }) => {
           </div>
         </div>
         
-        <button 
-          onClick={onExplore}
-          className="w-full px-4 py-3 rounded-xl text-white text-sm font-semibold bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 mt-auto touch-manipulation min-h-[44px]"
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleCardClick();
+          }}
+          className="mt-auto w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 touch-manipulation min-h-[44px]"
         >
           Explore Trail
         </button>
@@ -406,7 +441,6 @@ function Explore() {
                 key={mountain.id} 
                 mountain={mountain} 
                 viewMode={viewMode}
-                onExplore={() => navigate(`/mountains/${mountain.id}`)}
               />
             ))}
           </div>
