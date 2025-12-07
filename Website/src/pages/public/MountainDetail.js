@@ -39,6 +39,8 @@ function MountainDetail() {
   const [bookingsLoading, setBookingsLoading] = useState(false);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [overtimeFeeSelected, setOvertimeFeeSelected] = useState(false);
+  const [foodStubSelected, setFoodStubSelected] = useState(false);
 
   useEffect(() => {
     fetchMountain();
@@ -355,18 +357,48 @@ function MountainDetail() {
     // This is a fixed total price set by admin per mountain
     const exclusivePrice = parseFloat(mountain.exclusive_price) || 0;
 
-    // Calculate total price
-    let totalPrice = 0;
+    // Calculate base total price
+    let baseTotalPrice = 0;
     if (bookingType === 'exclusive') {
-      totalPrice = exclusivePrice;
+      baseTotalPrice = exclusivePrice;
     } else {
-      totalPrice = joinerPricePerHead * numberOfParticipants;
+      baseTotalPrice = joinerPricePerHead * numberOfParticipants;
     }
+
+    // Calculate additional fees (only if selected)
+    let additionalFees = 0;
+    if (mountainDetails.budgeting && Array.isArray(mountainDetails.budgeting)) {
+      mountainDetails.budgeting.forEach(fee => {
+        const feeName = fee.item_name;
+        const feeAmount = parseFloat(fee.item_amount || 0);
+        
+        // Only include Overtime Fee if selected
+        if (feeName === 'Overtime Fee' || feeName === 'Registration Fee') {
+          if (overtimeFeeSelected) {
+            additionalFees += feeAmount * numberOfParticipants;
+          }
+        }
+        // Only include Food Stub if selected
+        else if (feeName === 'Food Stub' || feeName === 'Over Time Fee' || feeName === 'Guide/Camping Fee') {
+          if (foodStubSelected) {
+            additionalFees += feeAmount * numberOfParticipants;
+          }
+        }
+        // Environmental Fee is always included (not optional)
+        else if (feeName === 'Environmental Fee') {
+          additionalFees += feeAmount * numberOfParticipants;
+        }
+      });
+    }
+
+    const totalPrice = baseTotalPrice + additionalFees;
 
     return {
       joinerPricePerHead: Math.round(joinerPricePerHead * 100) / 100,
       exclusivePrice: Math.round(exclusivePrice * 100) / 100,
-      totalPrice: Math.round(totalPrice * 100) / 100
+      totalPrice: Math.round(totalPrice * 100) / 100,
+      baseTotalPrice: Math.round(baseTotalPrice * 100) / 100,
+      additionalFees: Math.round(additionalFees * 100) / 100
     };
   };
 
@@ -379,6 +411,8 @@ function MountainDetail() {
     setStartDate('');
     setEndDate('');
     setNumberOfParticipants(1);
+    setOvertimeFeeSelected(false);
+    setFoodStubSelected(false);
     setBookingType('joiner');
     setBookingError('');
     setBookingSuccess('');
@@ -816,15 +850,22 @@ function MountainDetail() {
                     <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-white text-lg mx-auto mb-2">⏱️</div>
                     <div className="text-xs text-gray-500">Duration</div>
                     <div className="text-sm font-semibold text-gray-900">
-                      {mountain.difficulty === 'Easy' ? '2-4 hrs' :
-                       mountain.difficulty === 'Moderate' ? '4-6 hrs' :
-                       mountain.difficulty === 'Hard' ? '6-8 hrs' : '8+ hrs'}
+                      {mountain.duration || 
+                       (mountain.difficulty === 'Easy' ? '2-4 hrs' :
+                        mountain.difficulty === 'Moderate' ? '4-6 hrs' :
+                        mountain.difficulty === 'Hard' ? '6-8 hrs' : '8+ hrs')}
                     </div>
                   </div>
                   <div className="text-center">
-                    <div className="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center text-white text-lg mx-auto mb-2">📏</div>
-                    <div className="text-xs text-gray-500">Length</div>
-                    <div className="text-sm font-semibold text-gray-900">{mountain.elevation.toLocaleString()}m</div>
+                    <div className="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center text-white text-lg mx-auto mb-2">🏔️</div>
+                    <div className="text-xs text-gray-500">Elevation</div>
+                    <div className="text-sm font-semibold text-gray-900">
+                      {mountain.meters_above_sea_level 
+                        ? `${mountain.meters_above_sea_level.toLocaleString()}m` 
+                        : mountain.elevation 
+                          ? `${mountain.elevation.toLocaleString()}m` 
+                          : 'N/A'}
+                    </div>
                   </div>
                 </div>
 
@@ -1531,7 +1572,7 @@ function MountainDetail() {
                     <span className="text-gray-900 font-semibold ml-1">{mountain.difficulty}</span>
                   </div>
                   <div>
-                    <span className="text-gray-500 font-medium">Elevation:</span>
+                    <span className="text-gray-500 font-medium">Distance:</span>
                     <span className="text-gray-900 font-semibold ml-1">{mountain.elevation.toLocaleString()}m</span>
                   </div>
                   <div>
@@ -1586,7 +1627,21 @@ function MountainDetail() {
                   </div>
                   <div className="border-t-2 border-orange-300 pt-3 mt-3">
                     <div className="flex justify-between items-center">
-                      <span className="font-bold text-gray-900 text-base">Total Price:</span>
+                      <span className="font-bold text-gray-900 text-base">Base Price:</span>
+                      <span className="font-bold text-lg text-gray-900">
+                        ₱{calculatePricing().baseTotalPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                    {calculatePricing().additionalFees > 0 && (
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="font-semibold text-gray-700 text-sm">Additional Fees:</span>
+                        <span className="font-semibold text-base text-gray-700">
+                          ₱{calculatePricing().additionalFees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center mt-3 pt-3 border-t-2 border-orange-400">
+                      <span className="font-bold text-gray-900 text-lg">Total Amount:</span>
                       <span className="font-bold text-2xl text-orange-600">
                         ₱{calculatePricing().totalPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
@@ -1596,44 +1651,141 @@ function MountainDetail() {
               )}
 
               {/* Fees Breakdown */}
-              {mountainDetails.budgeting && mountainDetails.budgeting.length > 0 && (
-                <div className="bg-white border-2 border-gray-200 rounded-xl p-4 shadow-sm">
-                  <h4 className="font-bold text-gray-900 mb-3 text-sm uppercase tracking-wide">Additional Fees</h4>
-                  <div className="space-y-2.5 mb-3">
-                    {mountainDetails.budgeting.map((fee, index) => {
-                      const feeAmount = parseFloat(fee.item_amount || 0);
-                      const totalForFee = feeAmount * numberOfParticipants;
-                      return (
-                        <div key={index} className="flex justify-between items-center py-1.5 border-b border-gray-100 last:border-b-0">
-                          <div className="flex-1">
-                            <span className="text-sm text-gray-700 font-medium">{fee.item_name}</span>
-                            {numberOfParticipants > 1 && (
-                              <span className="text-xs text-gray-500 ml-1.5">
-                                (₱{feeAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} × {numberOfParticipants})
-                              </span>
-                            )}
+              {mountainDetails.budgeting && mountainDetails.budgeting.length > 0 && (() => {
+                // Separate fees into categories
+                const environmentalFee = mountainDetails.budgeting.find(f => f.item_name === 'Environmental Fee');
+                const overtimeFee = mountainDetails.budgeting.find(f => f.item_name === 'Overtime Fee' || f.item_name === 'Registration Fee');
+                const foodStub = mountainDetails.budgeting.find(f => f.item_name === 'Food Stub' || f.item_name === 'Over Time Fee' || f.item_name === 'Guide/Camping Fee');
+                const otherFees = mountainDetails.budgeting.filter(f => 
+                  f.item_name !== 'Environmental Fee' && 
+                  f.item_name !== 'Overtime Fee' && 
+                  f.item_name !== 'Registration Fee' &&
+                  f.item_name !== 'Food Stub' &&
+                  f.item_name !== 'Over Time Fee' &&
+                  f.item_name !== 'Guide/Camping Fee'
+                );
+
+                const hasAnyFees = environmentalFee || overtimeFee || foodStub || otherFees.length > 0;
+
+                if (!hasAnyFees) return null;
+
+                return (
+                  <div className="bg-white border-2 border-gray-200 rounded-xl p-4 shadow-sm">
+                    <h4 className="font-bold text-gray-900 mb-3 text-sm uppercase tracking-wide">Additional Fees</h4>
+                    <div className="space-y-2.5 mb-3">
+                      {/* Environmental Fee - Always shown (not optional) */}
+                      {environmentalFee && (() => {
+                        const feeAmount = parseFloat(environmentalFee.item_amount || 0);
+                        const totalForFee = feeAmount * numberOfParticipants;
+                        return (
+                          <div className="flex justify-between items-center py-1.5 border-b border-gray-100">
+                            <div className="flex-1">
+                              <span className="text-sm text-gray-700 font-medium">{environmentalFee.item_name}</span>
+                              {numberOfParticipants > 1 && (
+                                <span className="text-xs text-gray-500 ml-1.5">
+                                  (₱{feeAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} × {numberOfParticipants})
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-sm font-semibold text-gray-900">
+                              ₱{totalForFee.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
                           </div>
-                          <span className="text-sm font-semibold text-gray-900">
-                            ₱{totalForFee.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <div className="border-t-2 border-gray-300 pt-3 mt-3">
-                    <div className="flex justify-between items-center">
-                      <span className="font-bold text-gray-900 text-base">Total Additional Fees:</span>
-                      <span className="font-bold text-xl text-orange-600">
-                        ₱{(
-                          mountainDetails.budgeting.reduce((total, fee) => {
-                            return total + (parseFloat(fee.item_amount || 0) * numberOfParticipants);
-                          }, 0)
-                        ).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </span>
+                        );
+                      })()}
+
+                      {/* Overtime Fee - Optional with checkbox */}
+                      {overtimeFee && (() => {
+                        const feeAmount = parseFloat(overtimeFee.item_amount || 0);
+                        const totalForFee = feeAmount * numberOfParticipants;
+                        return (
+                          <div className="flex items-center justify-between py-1.5 border-b border-gray-100">
+                            <div className="flex items-center flex-1">
+                              <input
+                                type="checkbox"
+                                id="overtime-fee-checkbox"
+                                checked={overtimeFeeSelected}
+                                onChange={(e) => setOvertimeFeeSelected(e.target.checked)}
+                                className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500 focus:ring-2 cursor-pointer"
+                              />
+                              <label htmlFor="overtime-fee-checkbox" className="ml-2 text-sm text-gray-700 font-medium cursor-pointer flex-1">
+                                {overtimeFee.item_name === 'Registration Fee' ? 'Overtime Fee' : overtimeFee.item_name}
+                                {numberOfParticipants > 1 && (
+                                  <span className="text-xs text-gray-500 ml-1.5">
+                                    (₱{feeAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} × {numberOfParticipants})
+                                  </span>
+                                )}
+                              </label>
+                            </div>
+                            <span className={`text-sm font-semibold ${overtimeFeeSelected ? 'text-gray-900' : 'text-gray-400'}`}>
+                              ₱{totalForFee.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                        );
+                      })()}
+
+                      {/* Food Stub - Optional with checkbox */}
+                      {foodStub && (() => {
+                        const feeAmount = parseFloat(foodStub.item_amount || 0);
+                        const totalForFee = feeAmount * numberOfParticipants;
+                        return (
+                          <div className="flex items-center justify-between py-1.5 border-b border-gray-100">
+                            <div className="flex items-center flex-1">
+                              <input
+                                type="checkbox"
+                                id="food-stub-checkbox"
+                                checked={foodStubSelected}
+                                onChange={(e) => setFoodStubSelected(e.target.checked)}
+                                className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500 focus:ring-2 cursor-pointer"
+                              />
+                              <label htmlFor="food-stub-checkbox" className="ml-2 text-sm text-gray-700 font-medium cursor-pointer flex-1">
+                                {foodStub.item_name === 'Over Time Fee' || foodStub.item_name === 'Guide/Camping Fee' ? 'Food Stub' : foodStub.item_name}
+                                {numberOfParticipants > 1 && (
+                                  <span className="text-xs text-gray-500 ml-1.5">
+                                    (₱{feeAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} × {numberOfParticipants})
+                                  </span>
+                                )}
+                              </label>
+                            </div>
+                            <span className={`text-sm font-semibold ${foodStubSelected ? 'text-gray-900' : 'text-gray-400'}`}>
+                              ₱{totalForFee.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                        );
+                      })()}
+
+                      {/* Other fees - Always shown */}
+                      {otherFees.map((fee, index) => {
+                        const feeAmount = parseFloat(fee.item_amount || 0);
+                        const totalForFee = feeAmount * numberOfParticipants;
+                        return (
+                          <div key={index} className="flex justify-between items-center py-1.5 border-b border-gray-100 last:border-b-0">
+                            <div className="flex-1">
+                              <span className="text-sm text-gray-700 font-medium">{fee.item_name}</span>
+                              {numberOfParticipants > 1 && (
+                                <span className="text-xs text-gray-500 ml-1.5">
+                                  (₱{feeAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} × {numberOfParticipants})
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-sm font-semibold text-gray-900">
+                              ₱{totalForFee.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="border-t-2 border-gray-300 pt-3 mt-3">
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold text-gray-900 text-base">Total Additional Fees:</span>
+                        <span className="font-bold text-xl text-orange-600">
+                          ₱{calculatePricing().additionalFees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Action Buttons */}
               <div className="flex-shrink-0 bg-white border-t border-gray-200 -mx-4 sm:-mx-6 -mb-4 sm:-mb-5 px-4 sm:px-6 py-3 sm:py-4 rounded-b-xl sm:rounded-b-2xl flex gap-2 sm:gap-3" style={{ transform: 'translateZ(0)' }}>

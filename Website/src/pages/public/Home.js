@@ -276,7 +276,7 @@ function Home() {
                             </div>
                             <div className="flex items-center text-sm text-gray-600">
                               <span className="mr-2 text-base">📏</span>
-                              <span>Elevation: <span className="font-medium text-gray-900">{mountain.elevation.toLocaleString()}m</span></span>
+                              <span>Distance: <span className="font-medium text-gray-900">{mountain.elevation.toLocaleString()}m</span></span>
                             </div>
                             <div className="flex items-center text-sm text-gray-600">
                               <span className="mr-2 text-base">⚡</span>
@@ -346,7 +346,7 @@ function Home() {
                             </div>
                             <div className="flex items-center text-sm text-gray-600">
                               <span className="mr-2 text-base">📏</span>
-                              <span>Elevation: <span className="font-medium text-gray-900">{mountain.elevation.toLocaleString()}m</span></span>
+                              <span>Distance: <span className="font-medium text-gray-900">{mountain.elevation.toLocaleString()}m</span></span>
                             </div>
                             <div className="flex items-center text-sm text-gray-600">
                               <span className="mr-2 text-base">⚡</span>

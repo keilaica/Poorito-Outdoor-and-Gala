@@ -15,6 +15,8 @@ function MountainForm() {
     difficulty: 'Easy',
     status: 'backtrail',
     trip_duration: 1,
+    meters_above_sea_level: '',
+    duration: '',
     base_price_per_head: 1599.00,
     joiner_capacity: 14,
     exclusive_price: null,
@@ -54,6 +56,8 @@ function MountainForm() {
           difficulty: mountain.difficulty || 'Easy',
           status: mountain.status || 'backtrail',
           trip_duration: mountain.trip_duration || 1,
+          meters_above_sea_level: mountain.meters_above_sea_level || '',
+          duration: mountain.duration || '',
           base_price_per_head: mountain.base_price_per_head || 1599.00,
           joiner_capacity: mountain.joiner_capacity || 14,
           exclusive_price: mountain.exclusive_price !== undefined && mountain.exclusive_price !== null 
@@ -117,9 +121,11 @@ function MountainForm() {
           mountain.budgeting.forEach(item => {
             if (item.item_name === 'Environmental Fee') {
               feeData.environmentalFee = item.item_amount ? item.item_amount.toString() : '';
-            } else if (item.item_name === 'Registration Fee') {
+            } else if (item.item_name === 'Overtime Fee' || item.item_name === 'Registration Fee') {
+              // Support both old "Registration Fee" and new "Overtime Fee" names
               feeData.registrationFee = item.item_amount ? item.item_amount.toString() : '';
-            } else if (item.item_name === 'Guide/Camping Fee') {
+            } else if (item.item_name === 'Food Stub' || item.item_name === 'Over Time Fee' || item.item_name === 'Guide/Camping Fee') {
+              // Support old names: "Over Time Fee" and "Guide/Camping Fee", and new "Food Stub"
               feeData.guideCampingFee = item.item_amount ? item.item_amount.toString() : '';
             }
           });
@@ -207,7 +213,7 @@ function MountainForm() {
 
       // Validate required fields
       if (!formData.name || !formData.location || !formData.elevation) {
-        setError('Please fill in all required fields (Name, Location, Elevation)');
+        setError('Please fill in all required fields (Name, Location, Distance)');
         setLoading(false);
         return;
       }
@@ -240,8 +246,8 @@ function MountainForm() {
           })),
         budgeting: [
           { id: Date.now() + 100, item_name: 'Environmental Fee', item_amount: parseFloat(fees.environmentalFee) || 0, item_unit: 'per person', sort_order: 1 },
-          { id: Date.now() + 101, item_name: 'Registration Fee', item_amount: parseFloat(fees.registrationFee) || 0, item_unit: 'per person', sort_order: 2 },
-          { id: Date.now() + 102, item_name: 'Guide/Camping Fee', item_amount: parseFloat(fees.guideCampingFee) || 0, item_unit: 'per person', sort_order: 3 }
+          { id: Date.now() + 101, item_name: 'Overtime Fee', item_amount: parseFloat(fees.registrationFee) || 0, item_unit: 'per person', sort_order: 2 },
+          { id: Date.now() + 102, item_name: 'Food Stub', item_amount: parseFloat(fees.guideCampingFee) || 0, item_unit: 'per person', sort_order: 3 }
         ],
         itinerary: hikeItinerary
           .filter(item => item.title.trim() !== '')
@@ -292,6 +298,10 @@ function MountainForm() {
         difficulty: formData.difficulty,
         status: formData.status || 'backtrail',
         trip_duration: parseInt(formData.trip_duration) || 1,
+        meters_above_sea_level: (formData.meters_above_sea_level === '' || formData.meters_above_sea_level === null || formData.meters_above_sea_level === undefined)
+          ? null
+          : (isNaN(parseInt(formData.meters_above_sea_level)) ? null : parseInt(formData.meters_above_sea_level)),
+        duration: (formData.duration === '' || formData.duration === null || formData.duration === undefined) ? null : formData.duration.trim(),
         base_price_per_head: parseFloat(formData.base_price_per_head) || 1599.00,
         joiner_capacity: parseInt(formData.joiner_capacity) || 14,
         exclusive_price: (() => {
@@ -371,7 +381,7 @@ function MountainForm() {
       navigate('/admin/mountains', {
         state: {
           success: isEdit
-            ? `Mountain updated successfully! ${additionalImages.length > 0 ? `(${additionalImages.length} additional image${additionalImages.length > 1 ? 's' : ''} saved)` : ''}`
+            ? 'Mountain updated successfully!'
             : 'Mountain created successfully!'
         }
       });
@@ -543,12 +553,12 @@ function MountainForm() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <label htmlFor="mountain-elevation" className="block text-sm font-medium text-gray-700 mb-2">
-              Elevation (meters) <span className="text-red-500">*</span>
+              Distance (meters) <span className="text-red-500">*</span>
             </label>
             <input 
               id="mountain-elevation"
               type="number" 
-              placeholder="Elevation (meters) *" 
+              placeholder="Distance (meters) *" 
               value={formData.elevation}
               onChange={(e) => handleInputChange('elevation', e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
@@ -597,6 +607,38 @@ function MountainForm() {
               <option value="traverse">traverse</option>
               <option value="loop">loop</option>
             </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="mountain-meters-above-sea-level" className="block text-sm font-medium text-gray-700 mb-2">
+              Meters above sea level
+            </label>
+            <input 
+              id="mountain-meters-above-sea-level"
+              type="number" 
+              placeholder="Meters above sea level" 
+              value={formData.meters_above_sea_level}
+              onChange={(e) => handleInputChange('meters_above_sea_level', e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+            />
+          </div>
+          <div>
+            <label htmlFor="mountain-duration" className="block text-sm font-medium text-gray-700 mb-2">
+              Duration
+            </label>
+            <input 
+              id="mountain-duration"
+              type="text" 
+              placeholder="e.g., 10-14 hours" 
+              value={formData.duration}
+              onChange={(e) => handleInputChange('duration', e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Hike duration (e.g., "10-14 hours" or "10 hours")
+            </p>
           </div>
         </div>
 
@@ -759,12 +801,12 @@ function MountainForm() {
             </div>
             <div>
               <label htmlFor="registration-fee" className="block text-sm font-medium text-gray-700 mb-2">
-                Registration Fee
+                Overtime Fee <span className="text-gray-500 font-normal">(optional)</span>
               </label>
               <input 
                 id="registration-fee"
                 type="number" 
-                placeholder="Registration Fee" 
+                placeholder="Overtime Fee (optional)" 
                 value={fees.registrationFee}
                 onChange={(e) => handleFeeChange('registrationFee', e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
@@ -772,12 +814,12 @@ function MountainForm() {
             </div>
             <div>
               <label htmlFor="guide-camping-fee" className="block text-sm font-medium text-gray-700 mb-2">
-                Guide/Camping Fee
+                Food Stub <span className="text-gray-500 font-normal">(optional)</span>
               </label>
               <input 
                 id="guide-camping-fee"
                 type="number" 
-                placeholder="Guide/Camping Fee" 
+                placeholder="Food Stub (optional)" 
                 value={fees.guideCampingFee}
                 onChange={(e) => handleFeeChange('guideCampingFee', e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"

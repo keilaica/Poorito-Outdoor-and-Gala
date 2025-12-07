@@ -101,7 +101,7 @@ const MountainCard = ({ mountain, viewMode }) => {
                     <span className="w-7 h-7 flex items-center justify-center mr-2 text-xl flex-shrink-0">📏</span>
                     <div className="flex-1">
                       <div className="font-semibold text-gray-900">{mountain.elevation.toLocaleString()}m</div>
-                      <div className="text-xs text-gray-500 mt-0.5">Elevation</div>
+                      <div className="text-xs text-gray-500 mt-0.5">Distance</div>
                     </div>
                   </div>
                   <div className="flex items-start text-sm">
@@ -194,7 +194,7 @@ const MountainCard = ({ mountain, viewMode }) => {
           </div>
           <div className="flex items-center text-sm text-gray-700">
             <span className="w-6 h-6 flex items-center justify-center mr-2 text-lg flex-shrink-0">📏</span>
-            <span className="font-medium">{mountain.elevation.toLocaleString()}m elevation</span>
+            <span className="font-medium">{mountain.elevation.toLocaleString()}m distance</span>
           </div>
           <div className="flex items-center text-sm text-gray-700">
             <span className="w-6 h-6 flex items-center justify-center mr-2 text-lg flex-shrink-0">🏔️</span>
@@ -381,7 +381,7 @@ function Explore() {
                     className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 sm:py-3.5 pr-10 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-sm hover:border-gray-300 cursor-pointer appearance-none bg-white touch-manipulation min-h-[44px]"
                   >
                     <option value="name">📝 Name (A-Z)</option>
-                    <option value="elevation">📏 Elevation (High to Low)</option>
+                    <option value="elevation">📏 Distance (High to Low)</option>
                     <option value="difficulty">⚠️ Difficulty (Easy to Hard)</option>
                     <option value="location">📍 Location (A-Z)</option>
                   </select>

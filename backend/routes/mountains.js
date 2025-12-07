@@ -9,7 +9,7 @@ router.get('/', async (req, res) => {
   try {
     const { data: mountains, error } = await supabase
       .from('mountains')
-      .select('id, name, elevation, location, difficulty, description, image_url, additional_images, trip_duration, base_price_per_head, joiner_capacity, exclusive_price, is_joiner_available, is_exclusive_available, created_at, updated_at')
+      .select('id, name, elevation, location, difficulty, description, image_url, additional_images, trip_duration, meters_above_sea_level, duration, base_price_per_head, joiner_capacity, exclusive_price, is_joiner_available, is_exclusive_available, created_at, updated_at')
       .order('name', { ascending: true });
 
     if (error) {
@@ -73,7 +73,7 @@ router.get('/:id', async (req, res) => {
 // Create mountain (admin only) - temporarily without auth for testing
 router.post('/', async (req, res) => {
   try {
-    const { name, elevation, location, difficulty, description, status, image_url, additional_images, trip_duration, base_price_per_head, joiner_capacity, exclusive_price, is_joiner_available, is_exclusive_available } = req.body;
+    const { name, elevation, location, difficulty, description, status, image_url, additional_images, trip_duration, meters_above_sea_level, duration, base_price_per_head, joiner_capacity, exclusive_price, is_joiner_available, is_exclusive_available } = req.body;
     
     // Debug: Log received data
     console.log('Received mountain data:', {
@@ -101,6 +101,10 @@ router.post('/', async (req, res) => {
         description,
         status: status || 'backtrail',
         trip_duration: trip_duration || 1, // Default to 1 day if not provided
+        meters_above_sea_level: (meters_above_sea_level === null || meters_above_sea_level === '' || meters_above_sea_level === undefined) 
+          ? null 
+          : (isNaN(parseInt(meters_above_sea_level)) ? null : parseInt(meters_above_sea_level)),
+        duration: (duration === null || duration === '' || duration === undefined) ? null : duration,
         image_url,
         additional_images: Array.isArray(additional_images) ? additional_images : [],
         base_price_per_head: base_price_per_head || 1599.00,
@@ -155,6 +159,8 @@ router.put('/:id', async (req, res) => {
       image_url,
       additional_images,
       trip_duration,
+      meters_above_sea_level,
+      duration,
       base_price_per_head,
       joiner_capacity,
       exclusive_price,
@@ -195,6 +201,19 @@ router.put('/:id', async (req, res) => {
     if (description !== undefined) updateData.description = description;
     if (status !== undefined) updateData.status = status;
     if (trip_duration !== undefined) updateData.trip_duration = parseInt(trip_duration) || 1;
+    if (meters_above_sea_level !== undefined) {
+      // Handle empty strings, null, or undefined - convert to null
+      if (meters_above_sea_level === null || meters_above_sea_level === '' || meters_above_sea_level === undefined) {
+        updateData.meters_above_sea_level = null;
+      } else {
+        const parsed = parseInt(meters_above_sea_level);
+        updateData.meters_above_sea_level = isNaN(parsed) ? null : parsed;
+      }
+    }
+    if (duration !== undefined) {
+      // Handle empty strings - convert to null
+      updateData.duration = (duration === null || duration === '' || duration === undefined) ? null : duration;
+    }
     if (image_url !== undefined) updateData.image_url = image_url;
     if (base_price_per_head !== undefined) updateData.base_price_per_head = parseFloat(base_price_per_head) || 0;
     if (joiner_capacity !== undefined) updateData.joiner_capacity = parseInt(joiner_capacity) || 14;
@@ -485,6 +504,19 @@ router.get('/:mountainId/details', async (req, res) => {
   try {
     const { mountainId } = req.params;
     
+    // First check if mountain exists
+    const { data: mountainExists, error: checkError } = await supabase
+      .from('mountains')
+      .select('id')
+      .eq('id', mountainId)
+      .single();
+
+    if (checkError || !mountainExists) {
+      console.error('Mountain not found:', checkError);
+      return res.status(404).json({ error: 'Mountain not found' });
+    }
+
+    // Try to select the detail columns, but handle case where they might not exist
     const { data: mountain, error } = await supabase
       .from('mountains')
       .select('what_to_bring, budgeting, itinerary, how_to_get_there')
@@ -493,6 +525,22 @@ router.get('/:mountainId/details', async (req, res) => {
 
     if (error) {
       console.error('Get mountain details error:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      
+      // If columns don't exist, return empty arrays
+      if (error.message && (error.message.includes('column') || error.message.includes('does not exist'))) {
+        console.warn('Detail columns may not exist, returning empty arrays');
+        return res.json({
+          success: true,
+          data: {
+            what_to_bring: [],
+            budgeting: [],
+            itinerary: [],
+            how_to_get_there: []
+          }
+        });
+      }
+      
       return res.status(500).json({ 
         error: 'Failed to fetch mountain details',
         details: process.env.NODE_ENV !== 'production' ? error.message : undefined
@@ -506,15 +554,19 @@ router.get('/:mountainId/details', async (req, res) => {
     res.json({
       success: true,
       data: {
-        what_to_bring: mountain.what_to_bring || [],
-        budgeting: mountain.budgeting || [],
-        itinerary: mountain.itinerary || [],
-        how_to_get_there: mountain.how_to_get_there || []
+        what_to_bring: Array.isArray(mountain.what_to_bring) ? mountain.what_to_bring : (mountain.what_to_bring || []),
+        budgeting: Array.isArray(mountain.budgeting) ? mountain.budgeting : (mountain.budgeting || []),
+        itinerary: Array.isArray(mountain.itinerary) ? mountain.itinerary : (mountain.itinerary || []),
+        how_to_get_there: Array.isArray(mountain.how_to_get_there) ? mountain.how_to_get_there : (mountain.how_to_get_there || [])
       }
     });
   } catch (error) {
     console.error('Get mountain details error:', error);
-    res.status(500).json({ error: 'Failed to fetch mountain details' });
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Failed to fetch mountain details',
+      details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+    });
   }
 });
 

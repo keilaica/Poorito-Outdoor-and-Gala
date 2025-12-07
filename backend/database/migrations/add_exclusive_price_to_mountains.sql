@@ -16,3 +16,4 @@ WHERE exclusive_price IS NULL;
 COMMENT ON COLUMN mountains.exclusive_price IS 'Fixed total price for exclusive hike, set by admin. Independent of joiner pricing, capacity, or duration multipliers.';
 
 
+

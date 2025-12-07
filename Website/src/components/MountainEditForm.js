@@ -8,7 +8,9 @@ function MountainEditForm({ mountain, onSave, onCancel }) {
     elevation: '',
     location: '',
     difficulty: 'Easy',
-    status: 'backtrail'
+    status: 'backtrail',
+    meters_above_sea_level: '',
+    duration: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -21,7 +23,9 @@ function MountainEditForm({ mountain, onSave, onCancel }) {
         elevation: mountain.elevation || '',
         location: mountain.location || '',
         difficulty: mountain.difficulty || 'Easy',
-        status: mountain.status || 'backtrail'
+        status: mountain.status || 'backtrail',
+        meters_above_sea_level: mountain.meters_above_sea_level || '',
+        duration: mountain.duration || ''
       });
     }
   }, [mountain]);
@@ -52,7 +56,9 @@ function MountainEditForm({ mountain, onSave, onCancel }) {
         elevation: parseInt(formData.elevation),
         location: formData.location,
         difficulty: formData.difficulty,
-        status: formData.status || 'backtrail'
+        status: formData.status || 'backtrail',
+        meters_above_sea_level: formData.meters_above_sea_level ? parseInt(formData.meters_above_sea_level) : null,
+        duration: formData.duration || null
       };
 
       await apiService.updateMountain(mountain.id, updateData);
@@ -103,7 +109,7 @@ function MountainEditForm({ mountain, onSave, onCancel }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Elevation (meters) *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Distance (meters) *</label>
             <input
               type="number"
               name="elevation"
@@ -112,6 +118,32 @@ function MountainEditForm({ mountain, onSave, onCancel }) {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               required
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Meters above sea level</label>
+            <input
+              type="number"
+              name="meters_above_sea_level"
+              value={formData.meters_above_sea_level}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Duration</label>
+            <input
+              type="text"
+              name="duration"
+              value={formData.duration}
+              onChange={handleChange}
+              placeholder="e.g., 10-14 hours"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Hike duration (e.g., "10-14 hours" or "10 hours")
+            </p>
           </div>
 
           <div>

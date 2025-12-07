@@ -23,3 +23,4 @@ WHERE status IS NULL;
 ALTER TABLE mountains 
 ALTER COLUMN status SET DEFAULT 'backtrail';
 
+

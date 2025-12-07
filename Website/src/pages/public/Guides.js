@@ -241,6 +241,12 @@ function Guides() {
                           <h4 className="font-bold text-gray-900 text-lg mb-2 group-hover:text-orange-600 transition-colors line-clamp-2">
                             {article.title}
                           </h4>
+                          {article.mountain_name && article.mountain_name !== 'General' && (
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-sm">⛰️</span>
+                              <span className="text-sm font-medium text-orange-600">{article.mountain_name}</span>
+                            </div>
+                          )}
                           <p className="text-sm text-gray-600 mb-4 line-clamp-3">
                             {truncateContent(article.content)}
                           </p>
@@ -428,11 +434,17 @@ function Guides() {
                 </div>
               )}
               
-              <div className="flex items-center gap-4 mb-6 text-sm text-gray-600">
+              <div className="flex items-center gap-4 mb-6 text-sm text-gray-600 flex-wrap">
                 <div className="flex items-center gap-2">
                   <span>👤</span>
                   <span className="font-medium">{selectedArticle.author}</span>
                 </div>
+                {selectedArticle.mountain_name && selectedArticle.mountain_name !== 'General' && (
+                  <div className="flex items-center gap-2">
+                    <span>⛰️</span>
+                    <span className="font-medium text-orange-600">{selectedArticle.mountain_name}</span>
+                  </div>
+                )}
                 {selectedArticle.created_at && (
                   <div className="flex items-center gap-2">
                     <span>📅</span>
