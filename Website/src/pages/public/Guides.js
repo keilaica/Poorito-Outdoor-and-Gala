@@ -1,7 +1,85 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import LandscapeView from '../../components/LandscapeView';
+import apiService from '../../services/api';
 
 function Guides() {
+  const navigate = useNavigate();
+  const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedArticle, setSelectedArticle] = useState(null);
+
+  // Fetch articles from API
+  useEffect(() => {
+    fetchArticles();
+  }, []);
+
+  const fetchArticles = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await apiService.getArticles();
+      setArticles(response.articles || []);
+    } catch (err) {
+      console.error('Error fetching articles:', err);
+      setError('Failed to load articles. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Group articles by category
+  const articlesByCategory = articles.reduce((acc, article) => {
+    const category = article.category || 'Other';
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(article);
+    return acc;
+  }, {});
+
+  // Get category color and icon mapping
+  const getCategoryStyle = (category) => {
+    switch (category) {
+      case 'Planning':
+        return {
+          color: 'from-sky-500 to-sky-600',
+          icon: '🗺️',
+          bgColor: 'bg-sky-50',
+          borderColor: 'border-sky-200',
+        };
+      case 'Gear':
+        return {
+          color: 'from-emerald-500 to-emerald-600',
+          icon: '🎒',
+          bgColor: 'bg-emerald-50',
+          borderColor: 'border-emerald-200',
+        };
+      case 'Safety':
+        return {
+          color: 'from-rose-500 to-rose-600',
+          icon: '🚨',
+          bgColor: 'bg-rose-50',
+          borderColor: 'border-rose-200',
+        };
+      default:
+        return {
+          color: 'from-gray-500 to-gray-600',
+          icon: '📄',
+          bgColor: 'bg-gray-50',
+          borderColor: 'border-gray-200',
+        };
+    }
+  };
+
+  // Truncate content for preview
+  const truncateContent = (content, maxLength = 150) => {
+    if (!content) return '';
+    if (content.length <= maxLength) return content;
+    return content.substring(0, maxLength).trim() + '...';
+  };
+
   const sections = [
     {
       title: 'Trip planning',
@@ -97,6 +175,122 @@ function Guides() {
           <LandscapeView className="h-full min-h-[420px] w-full" />
         </div>
 
+        {/* Articles Section */}
+        {articles.length > 0 && (
+          <div className="mb-14">
+            <div className="mb-8">
+              <p className="text-xs font-semibold tracking-[0.22em] text-orange-500 uppercase mb-2">
+                Featured articles
+              </p>
+              <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-3">
+                Expert Guides &amp; Tips
+              </h2>
+              <p className="text-gray-600 text-base md:text-lg">
+                In-depth articles from experienced hikers and guides to help you prepare for your next adventure.
+              </p>
+            </div>
+
+            {/* Articles by Category */}
+            {Object.entries(articlesByCategory).map(([category, categoryArticles]) => {
+              if (categoryArticles.length === 0) return null;
+              const style = getCategoryStyle(category);
+              
+              return (
+                <div key={category} className="mb-10">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${style.color} flex items-center justify-center text-xl text-white shadow-md`}>
+                      {style.icon}
+                    </div>
+                    <h3 className="text-xl md:text-2xl font-bold text-gray-900">{category} Articles</h3>
+                    <span className="text-sm text-gray-500">({categoryArticles.length})</span>
+                  </div>
+                  
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {categoryArticles.map((article) => (
+                      <div
+                        key={article.id}
+                        className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:border-orange-300 transition-all duration-300 group cursor-pointer"
+                        onClick={() => setSelectedArticle(article)}
+                      >
+                        {article.image_url ? (
+                          <div className="relative h-48 overflow-hidden">
+                            <img
+                              src={article.image_url}
+                              alt={article.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <div className="absolute top-3 right-3">
+                              <span className={`px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm border ${style.bgColor} ${style.borderColor} text-gray-800`}>
+                                {article.category}
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className={`relative h-48 ${style.bgColor} flex items-center justify-center`}>
+                            <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${style.color} flex items-center justify-center text-3xl text-white shadow-md`}>
+                              {style.icon}
+                            </div>
+                            <div className="absolute top-3 right-3">
+                              <span className={`px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm border ${style.bgColor} ${style.borderColor} text-gray-800`}>
+                                {article.category}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                        <div className="p-6">
+                          <h4 className="font-bold text-gray-900 text-lg mb-2 group-hover:text-orange-600 transition-colors line-clamp-2">
+                            {article.title}
+                          </h4>
+                          <p className="text-sm text-gray-600 mb-4 line-clamp-3">
+                            {truncateContent(article.content)}
+                          </p>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                              <span>👤</span>
+                              <span>{article.author}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {article.link && (
+                                <span className="text-xs text-blue-600" title="Has external link">
+                                  🔗
+                                </span>
+                              )}
+                              <span className="text-xs text-orange-600 font-semibold group-hover:underline">
+                                Read more →
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Loading State */}
+        {loading && (
+          <div className="mb-14 text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading articles...</p>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !loading && (
+          <div className="mb-14 bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
+            <p className="text-red-600">{error}</p>
+            <button
+              onClick={fetchArticles}
+              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
+        )}
+
         {/* Leave No Trace section */}
         <div className="mb-14">
           <div className="bg-white border border-gray-100 rounded-3xl p-8 md:p-10 shadow-sm">
@@ -190,6 +384,93 @@ function Guides() {
           </div>
         </div>
       </div>
+
+      {/* Article Modal */}
+      {selectedArticle && (
+        <div
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          onClick={() => setSelectedArticle(null)}
+        >
+          <div
+            className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+              <div className="flex items-center gap-3">
+                {selectedArticle.category && (
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getCategoryStyle(selectedArticle.category).bgColor} ${getCategoryStyle(selectedArticle.category).borderColor} border text-gray-800`}>
+                    {selectedArticle.category}
+                  </span>
+                )}
+                <h2 className="text-xl md:text-2xl font-bold text-gray-900">{selectedArticle.title}</h2>
+              </div>
+              <button
+                onClick={() => setSelectedArticle(null)}
+                className="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100"
+                aria-label="Close"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 md:p-8">
+              {selectedArticle.image_url && (
+                <div className="mb-6 rounded-xl overflow-hidden">
+                  <img
+                    src={selectedArticle.image_url}
+                    alt={selectedArticle.title}
+                    className="w-full h-64 md:h-80 object-cover"
+                  />
+                </div>
+              )}
+              
+              <div className="flex items-center gap-4 mb-6 text-sm text-gray-600">
+                <div className="flex items-center gap-2">
+                  <span>👤</span>
+                  <span className="font-medium">{selectedArticle.author}</span>
+                </div>
+                {selectedArticle.created_at && (
+                  <div className="flex items-center gap-2">
+                    <span>📅</span>
+                    <span>{new Date(selectedArticle.created_at).toLocaleDateString('en-US', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="prose prose-lg max-w-none">
+                <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                  {selectedArticle.content}
+                </div>
+              </div>
+
+              {/* External Link */}
+              {selectedArticle.link && (
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <a
+                    href={selectedArticle.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transition-all"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    <span>Visit External Link</span>
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

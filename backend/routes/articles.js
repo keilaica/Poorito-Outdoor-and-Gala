@@ -9,7 +9,7 @@ router.get('/', async (req, res) => {
   try {
     const { data: articles, error } = await supabase
       .from('articles')
-      .select('id, title, content, author, category, image_url, created_at, updated_at, status')
+      .select('id, title, content, author, category, image_url, link, mountain_name, created_at, updated_at, status')
       .eq('status', 'published')
       .order('created_at', { ascending: false });
 
@@ -108,7 +108,7 @@ router.get('/admin', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { data: articles, error } = await supabase
       .from('articles')
-      .select('id, title, content, author, category, image_url, created_at, updated_at, status')
+      .select('id, title, content, author, category, image_url, link, mountain_name, created_at, updated_at, status')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -154,7 +154,7 @@ router.get('/:id', async (req, res) => {
 // Create article (admin only)
 router.post('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const { title, content, author, category, image_url, status = 'draft' } = req.body;
+    const { title, content, author, category, image_url, link, mountain_name, status = 'draft' } = req.body;
 
     if (!title || !content || !author) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -168,6 +168,8 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
         author,
         category,
         image_url,
+        link,
+        mountain_name,
         status,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -194,7 +196,7 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
 router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, content, author, category, image_url, status } = req.body;
+    const { title, content, author, category, image_url, link, mountain_name, status } = req.body;
 
     const { data: updatedArticle, error } = await supabase
       .from('articles')
@@ -204,6 +206,8 @@ router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
         author,
         category,
         image_url,
+        link,
+        mountain_name,
         status,
         updated_at: new Date().toISOString()
       })

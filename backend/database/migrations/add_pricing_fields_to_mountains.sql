@@ -41,3 +41,5 @@ COMMENT ON COLUMN mountains.is_joiner_available IS 'Whether joiner (shared group
 COMMENT ON COLUMN mountains.is_exclusive_available IS 'Whether exclusive (private group) hikes are available for this mountain';
 
 
+
+

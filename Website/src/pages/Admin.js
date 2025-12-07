@@ -237,12 +237,14 @@ function Admin() {
           </p>
         </div>
         <div className="flex gap-3">
-          <button
-            onClick={() => handleCreate(activeTab)}
-            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
-          >
-            + Add {activeTab === 'mountains' ? 'Mountain' : activeTab === 'articles' ? 'Article' : 'Mountain Detail'}
-          </button>
+          {!location.pathname.includes('/bookings') && (
+            <button
+              onClick={() => handleCreate(activeTab)}
+              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+            >
+              + Add {activeTab === 'mountains' ? 'Mountain' : activeTab === 'articles' ? 'Article' : 'Mountain Detail'}
+            </button>
+          )}
           <button
             onClick={fetchData}
             className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
@@ -253,40 +255,42 @@ function Admin() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          <button
-            onClick={() => setActiveTab('mountains')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'mountains'
-                ? 'border-orange-500 text-orange-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            Mountains ({mountains.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('articles')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'articles'
-                ? 'border-orange-500 text-orange-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            Articles ({articles.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('bookings')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'bookings'
-                ? 'border-orange-500 text-orange-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            Bookings ({bookings.length})
-          </button>
-        </nav>
-      </div>
+      {!location.pathname.includes('/bookings') && (
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => setActiveTab('mountains')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'mountains'
+                  ? 'border-orange-500 text-orange-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Mountains ({mountains.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('articles')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'articles'
+                  ? 'border-orange-500 text-orange-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Articles ({articles.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('bookings')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'bookings'
+                  ? 'border-orange-500 text-orange-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Bookings ({bookings.length})
+            </button>
+          </nav>
+        </div>
+      )}
 
       {/* Error Message */}
       {error && (

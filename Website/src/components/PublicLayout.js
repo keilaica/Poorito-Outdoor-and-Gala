@@ -414,6 +414,35 @@ function PublicLayout() {
           </div>
         </div>
       </footer>
+
+      {/* Floating Messenger Chat Button */}
+      <a
+        href="https://m.me/61558322062223"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-[60] bg-green-600 hover:bg-green-700 active:bg-green-800 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg md:hover:scale-105 transition-all duration-200 touch-manipulation group"
+        aria-label="Contact us on Messenger"
+        style={{ 
+          bottom: 'max(5rem, calc(1.5rem + env(safe-area-inset-bottom)))',
+          right: 'max(1rem, calc(1rem + env(safe-area-inset-right)))'
+        }}
+      >
+        {/* Messenger Icon SVG */}
+        <svg
+          className="w-8 h-8"
+          fill="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path d="M12 0C5.373 0 0 4.925 0 11c0 2.153.74 4.14 1.97 5.7L0 24l7.625-4.025C9.23 20.516 10.584 20.9 12 20.9c6.627 0 12-4.925 12-11S18.627 0 12 0zm.05 18.5c-1.378 0-2.733-.38-3.9-1.1L2.5 20.5l3.175-5.325C4.625 13.825 4 12.475 4 11c0-4.687 3.582-8.5 8-8.5s8 3.813 8 8.5-3.582 8.5-7.95 8.5z"/>
+        </svg>
+        
+        {/* Desktop Tooltip */}
+        <span className="hidden md:block absolute right-full mr-3 top-1/2 -translate-y-1/2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-lg">
+          Need help? Message us!
+          <span className="absolute left-full top-1/2 -translate-y-1/2 border-4 border-transparent border-l-gray-900"></span>
+        </span>
+      </a>
     </div>
   );
 }

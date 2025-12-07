@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import apiService from '../../services/api';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
 
 function MountainDetail() {
   const { id } = useParams();
@@ -20,8 +25,7 @@ function MountainDetail() {
   const [mountainDetails, setMountainDetails] = useState({ 
     what_to_bring: [], 
     budgeting: [], 
-    itinerary: [], 
-    how_to_get_there: [] 
+    itinerary: []
   });
   const [detailsLoading, setDetailsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('What to Bring');
@@ -180,8 +184,7 @@ function MountainDetail() {
       setMountainDetails({ 
         what_to_bring: [], 
         budgeting: [], 
-        itinerary: [], 
-        how_to_get_there: [] 
+        itinerary: []
       });
     } finally {
       setDetailsLoading(false);
@@ -653,9 +656,73 @@ function MountainDetail() {
           <div className="flex flex-col lg:flex-row gap-8">
             {/* Main Image Gallery */}
             <div className="lg:w-2/3">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {/* Mobile/Tablet Carousel (hidden on desktop) - Shows ONE image at a time */}
+              <div className="lg:hidden">
+                {(() => {
+                  const images = getAllImages();
+                  const hasMultipleImages = images.length > 1;
+                  
+                  return (
+                    <Swiper
+                      modules={hasMultipleImages ? [Navigation, Pagination] : []}
+                      spaceBetween={0}
+                      slidesPerView={1}
+                      slidesPerGroup={1}
+                      allowTouchMove={true}
+                      navigation={hasMultipleImages ? {
+                        enabled: true, // Will be controlled by CSS for tablet only
+                      } : false}
+                      pagination={hasMultipleImages ? {
+                        clickable: true,
+                        dynamicBullets: true,
+                      } : false}
+                      touchRatio={1}
+                      resistance={true}
+                      resistanceRatio={0}
+                      speed={300}
+                      className="mountain-carousel rounded-2xl overflow-hidden shadow-xl"
+                      style={{
+                        '--swiper-navigation-size': '24px',
+                        '--swiper-pagination-color': '#fff',
+                        '--swiper-pagination-bullet-inactive-color': 'rgba(255, 255, 255, 0.5)',
+                      }}
+                    >
+                      {images.length > 0 ? (
+                        images.map((img, index) => (
+                          <SwiperSlide key={index}>
+                            <div 
+                              className="aspect-video rounded-2xl overflow-hidden bg-gradient-to-br from-orange-500 to-orange-700 cursor-pointer"
+                              onClick={() => openImageViewer(index)}
+                            >
+                              <img 
+                                src={img} 
+                                alt={`${mountain.name} - Image ${index + 1}`} 
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                                decoding="async"
+                              />
+                            </div>
+                          </SwiperSlide>
+                        ))
+                      ) : (
+                        <SwiperSlide>
+                          <div className="aspect-video rounded-2xl overflow-hidden bg-gradient-to-br from-orange-500 to-orange-700 flex items-center justify-center">
+                            <div className="text-center">
+                              <div className="text-8xl mb-4">⛰️</div>
+                              <p className="text-white text-xl font-semibold">{mountain.name}</p>
+                            </div>
+                          </div>
+                        </SwiperSlide>
+                      )}
+                    </Swiper>
+                  );
+                })()}
+              </div>
+
+              {/* Desktop Grid Layout (hidden on mobile/tablet) */}
+              <div className="hidden lg:grid grid-cols-4 gap-4">
                 {/* Main Image */}
-                <div className="md:col-span-3">
+                <div className="col-span-3">
                   <div 
                     className="aspect-video rounded-2xl overflow-hidden shadow-xl bg-gradient-to-br from-orange-500 to-orange-700 cursor-pointer hover:opacity-90 transition-opacity"
                     onClick={() => {
@@ -839,7 +906,7 @@ function MountainDetail() {
         {/* Navigation Tabs */}
         <div className="mb-8">
           <div className="flex flex-wrap sm:flex-nowrap gap-1 sm:gap-1 bg-gray-100 rounded-xl p-1 overflow-x-auto">
-            {['What to Bring', 'Budgeting', 'Itinerary', 'How to get there'].map((tab) => (
+            {['What to Bring', 'Budgeting', 'Itinerary'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -995,74 +1062,6 @@ function MountainDetail() {
             )}
           </div>
 
-          )}
-
-          {/* How to Get There Section */}
-          {activeTab === 'How to get there' && (
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">How to get there?</h2>
-            <p className="text-gray-600 mb-8">How to Commute to {mountain.name} from Metro Manila (Public Transport)</p>
-            
-            {detailsLoading ? (
-              <div className="grid md:grid-cols-2 gap-8">
-                {[...Array(2)].map((_, index) => (
-                  <div key={index} className="space-y-4">
-                    <div className="w-32 h-6 bg-gray-300 rounded animate-pulse"></div>
-                    <div className="bg-gray-50 rounded-xl p-6 space-y-3">
-                      <div className="w-48 h-4 bg-gray-300 rounded animate-pulse"></div>
-                      {[...Array(4)].map((_, i) => (
-                        <div key={i} className="flex items-start gap-2">
-                          <div className="w-2 h-2 bg-gray-300 rounded-full mt-1 animate-pulse"></div>
-                          <div className="w-64 h-3 bg-gray-300 rounded animate-pulse"></div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : mountainDetails.how_to_get_there.length > 0 ? (
-              <div className="grid md:grid-cols-2 gap-8">
-                {Object.entries(mountainDetails.how_to_get_there.reduce((acc, item) => {
-                  const transportType = item.item_transport_type || 'both';
-                  if (!acc[transportType]) {
-                    acc[transportType] = [];
-                  }
-                  acc[transportType].push(item);
-                  return acc;
-                }, {})).map(([transportType, group]) => (
-                  <div key={transportType}>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                      {transportType === 'private' ? 'Private Vehicle' : 
-                       transportType === 'public' ? 'Public Transportation' : 
-                       'Transportation Options'}
-                    </h3>
-                    <div className="bg-gray-50 rounded-xl p-6">
-                      <div className="space-y-3 text-sm text-gray-700">
-                        {group.map((item, index) => (
-                          <div key={item.id || index} className="flex items-start gap-2">
-                            <span className={`mt-1 ${
-                              transportType === 'private' ? 'text-orange-500' : 
-                              transportType === 'public' ? 'text-blue-500' : 
-                              'text-gray-500'
-                            }`}>•</span>
-                            <span>{item.item_name}</span>
-                            {item.item_description && (
-                              <div className="text-xs text-gray-600 mt-1">{item.item_description}</div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <div className="text-4xl mb-4">🚗</div>
-                <p>No transportation details available yet. Check back soon!</p>
-              </div>
-            )}
-            </div>
           )}
 
           {/* Reminders Section */}

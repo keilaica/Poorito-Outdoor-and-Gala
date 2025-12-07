@@ -13,7 +13,7 @@ function MountainForm() {
     elevation: '',
     location: '',
     difficulty: 'Easy',
-    status: 'Single',
+    status: 'backtrail',
     trip_duration: 1,
     base_price_per_head: 1599.00,
     joiner_capacity: 14,
@@ -21,10 +21,9 @@ function MountainForm() {
     is_joiner_available: true,
     is_exclusive_available: true
   });
-  const [images, setImages] = useState([null, null, null, null, null]);
+  const [images, setImages] = useState([null, null, null, null]);
   const [thingsToBring, setThingsToBring] = useState(['']);
   const [hikeItinerary, setHikeItinerary] = useState([{ title: '', description: '', location: '', time: '' }]);
-  const [transportationGuides, setTransportationGuides] = useState([{ header: 'Public Transport', title: '', description: '' }]);
   const [fees, setFees] = useState({
     environmentalFee: '',
     registrationFee: '',
@@ -53,7 +52,7 @@ function MountainForm() {
           elevation: mountain.elevation || '',
           location: mountain.location || '',
           difficulty: mountain.difficulty || 'Easy',
-          status: mountain.status || 'Single',
+          status: mountain.status || 'backtrail',
           trip_duration: mountain.trip_duration || 1,
           base_price_per_head: mountain.base_price_per_head || 1599.00,
           joiner_capacity: mountain.joiner_capacity || 14,
@@ -65,7 +64,7 @@ function MountainForm() {
         });
         
         // Load existing images if available
-        const loadedImages = [null, null, null, null, null];
+        const loadedImages = [null, null, null, null];
         if (mountain.image_url) {
           loadedImages[0] = mountain.image_url;
           console.log('Loaded main image');
@@ -74,7 +73,7 @@ function MountainForm() {
         if (mountain.additional_images && Array.isArray(mountain.additional_images)) {
           console.log('Loading additional images:', mountain.additional_images.length);
           mountain.additional_images.forEach((img, index) => {
-            if (index < 4) { // Max 4 additional images
+            if (index < 3) { // Max 3 additional images
               loadedImages[index + 1] = img;
               console.log(`Loaded additional image ${index + 1} to slot ${index + 1}`);
             }
@@ -103,17 +102,6 @@ function MountainForm() {
           }));
           console.log('Setting hike itinerary:', itineraryItems);
           setHikeItinerary(itineraryItems.length > 0 ? itineraryItems : [{ title: '', description: '', location: '', time: '' }]);
-        }
-
-        console.log('how_to_get_there data:', mountain.how_to_get_there);
-        if (mountain.how_to_get_there && Array.isArray(mountain.how_to_get_there)) {
-          const transportItems = mountain.how_to_get_there.map(item => ({
-            header: item.item_transport_type === 'private' ? 'Private Transport' : 'Public Transport',
-            title: item.item_name || '',
-            description: item.item_description || ''
-          }));
-          console.log('Setting transportation guides:', transportItems);
-          setTransportationGuides(transportItems.length > 0 ? transportItems : [{ header: 'Public Transport', title: '', description: '' }]);
         }
 
         console.log('budgeting data:', mountain.budgeting);
@@ -198,15 +186,6 @@ function MountainForm() {
     setHikeItinerary([...hikeItinerary, { title: '', description: '', location: '', time: '' }]);
   };
 
-  const addTransportationGuide = () => {
-    setTransportationGuides([...transportationGuides, { header: 'Public Transport', title: '', description: '' }]);
-  };
-
-  const removeTransportationGuide = (index) => {
-    const newGuides = transportationGuides.filter((_, i) => i !== index);
-    setTransportationGuides(newGuides.length > 0 ? newGuides : [{ header: 'Public Transport', title: '', description: '' }]);
-  };
-
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -273,33 +252,24 @@ function MountainForm() {
             item_time: item.time,
             item_duration: '2-3 hours', // Default duration
             sort_order: index + 1
-          })),
-        how_to_get_there: transportationGuides
-          .filter(item => item.header.trim() !== '')
-          .map((item, index) => ({
-            id: Date.now() + 300 + index,
-            item_name: item.title,
-            item_description: item.description,
-            item_transport_type: item.header.toLowerCase().includes('private') ? 'private' : 'public',
-            sort_order: index + 1
           }))
       };
 
       // Filter out null images and prepare additional images array
-      // Keep all images from slots 1-4 (indices 1-4), preserving order
-      const additionalImages = images.slice(1, 5).filter(img => img !== null && img !== undefined);
+      // Keep all images from slots 1-3 (indices 1-3), preserving order
+      const additionalImages = images.slice(1, 4).filter(img => img !== null && img !== undefined);
       
       console.log('Images state before save:', {
         total: images.length,
         main: images[0] ? 'Present' : 'Missing',
         additional: additionalImages.length,
-        allSlots: images.map((img, idx) => ({
-          slot: idx,
-          hasImage: !!img,
-          isMain: idx === 0,
-          isAdditional: idx > 0 && idx < 5,
-          imageType: img ? (img.startsWith('data:') ? 'base64' : 'url') : 'null'
-        })),
+          allSlots: images.map((img, idx) => ({
+            slot: idx,
+            hasImage: !!img,
+            isMain: idx === 0,
+            isAdditional: idx > 0 && idx < 4,
+            imageType: img ? (img.startsWith('data:') ? 'base64' : 'url') : 'null'
+          })),
         additionalDetails: additionalImages.map((img, idx) => ({
           index: idx + 1,
           length: img ? img.length : 0,
@@ -320,6 +290,7 @@ function MountainForm() {
         elevation: parseInt(formData.elevation),
         location: formData.location,
         difficulty: formData.difficulty,
+        status: formData.status || 'backtrail',
         trip_duration: parseInt(formData.trip_duration) || 1,
         base_price_per_head: parseFloat(formData.base_price_per_head) || 1599.00,
         joiner_capacity: parseInt(formData.joiner_capacity) || 14,
@@ -531,7 +502,7 @@ function MountainForm() {
               </div>
             ))}
             <div className="text-center text-sm text-gray-500 font-medium">
-              {images.filter(img => img !== null).length}/5
+              {images.filter(img => img !== null).length}/4
               {images.slice(1).filter(img => img !== null).length > 0 && (
                 <div className="text-xs text-green-600 mt-1">
                   {images.slice(1).filter(img => img !== null).length} additional image{images.slice(1).filter(img => img !== null).length > 1 ? 's' : ''} ready to save
@@ -622,9 +593,9 @@ function MountainForm() {
               onChange={(e) => handleInputChange('status', e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
             >
-              <option value="Single">Single</option>
-              <option value="Multiple">Multiple</option>
-              <option value="Closed">Closed</option>
+              <option value="backtrail">backtrail</option>
+              <option value="traverse">traverse</option>
+              <option value="loop">loop</option>
             </select>
           </div>
         </div>
@@ -893,80 +864,6 @@ function MountainForm() {
           ))}
           <button 
             onClick={addHikeItinerary}
-            className="w-12 h-12 bg-gradient-to-r from-secondary to-green-600 hover:from-secondary hover:to-green-700 text-white rounded-lg text-2xl font-bold transition-all shadow-sm hover:shadow-md"
-          >
-            +
-          </button>
-        </div>
-
-        <div className="space-y-6 pt-6 border-t">
-          <h2 className="text-2xl font-bold text-gray-800 uppercase tracking-wide">Transportation Guide</h2>
-          {transportationGuides.map((item, index) => (
-            <div key={index} className="space-y-3 p-6 bg-gray-50 rounded-lg relative">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-lg font-semibold text-gray-700">{item.title || 'Title'}</h3>
-                <button 
-                  onClick={() => removeTransportationGuide(index)}
-                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-all shadow-sm hover:shadow-md text-sm font-medium"
-                >
-                  Remove
-                </button>
-              </div>
-              <div>
-                <label htmlFor={`transport-header-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
-                  Transport Type
-                </label>
-                <input 
-                  id={`transport-header-${index}`}
-                  type="text" 
-                  placeholder="Public Transport" 
-                  value={item.header}
-                  onChange={(e) => {
-                    const newGuides = [...transportationGuides];
-                    newGuides[index].header = e.target.value;
-                    setTransportationGuides(newGuides);
-                  }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all bg-white"
-                />
-              </div>
-              <div>
-                <label htmlFor={`transport-title-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
-                  Title
-                </label>
-                <input 
-                  id={`transport-title-${index}`}
-                  type="text" 
-                  placeholder="Title" 
-                  value={item.title}
-                  onChange={(e) => {
-                    const newGuides = [...transportationGuides];
-                    newGuides[index].title = e.target.value;
-                    setTransportationGuides(newGuides);
-                  }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all bg-white"
-                />
-              </div>
-              <div>
-                <label htmlFor={`transport-description-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
-                </label>
-                <textarea 
-                  id={`transport-description-${index}`}
-                  placeholder="Description" 
-                  rows="3"
-                  value={item.description}
-                  onChange={(e) => {
-                    const newGuides = [...transportationGuides];
-                    newGuides[index].description = e.target.value;
-                    setTransportationGuides(newGuides);
-                  }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all resize-none bg-white"
-                ></textarea>
-              </div>
-            </div>
-          ))}
-          <button 
-            onClick={addTransportationGuide}
             className="w-12 h-12 bg-gradient-to-r from-secondary to-green-600 hover:from-secondary hover:to-green-700 text-white rounded-lg text-2xl font-bold transition-all shadow-sm hover:shadow-md"
           >
             +

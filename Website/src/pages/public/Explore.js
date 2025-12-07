@@ -123,7 +123,7 @@ const MountainCard = ({ mountain, viewMode }) => {
                   <div className="flex items-start text-sm">
                     <span className="w-7 h-7 flex items-center justify-center mr-2 text-xl flex-shrink-0">🏔️</span>
                     <div className="flex-1">
-                      <div className="font-semibold text-gray-900">{mountain.status || 'Single'}</div>
+                      <div className="font-semibold text-gray-900">{mountain.status || 'backtrail'}</div>
                       <div className="text-xs text-gray-500 mt-0.5">Type</div>
                     </div>
                   </div>
@@ -198,7 +198,7 @@ const MountainCard = ({ mountain, viewMode }) => {
           </div>
           <div className="flex items-center text-sm text-gray-700">
             <span className="w-6 h-6 flex items-center justify-center mr-2 text-lg flex-shrink-0">🏔️</span>
-            <span className="font-medium">{mountain.status || 'Single'} trail</span>
+            <span className="font-medium">{mountain.status || 'backtrail'} trail</span>
           </div>
         </div>
         

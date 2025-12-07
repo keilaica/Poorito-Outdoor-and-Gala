@@ -10,3 +10,5 @@ DELETE FROM bookings;
 -- ALTER SEQUENCE bookings_id_seq RESTART WITH 1;
 
 
+
+

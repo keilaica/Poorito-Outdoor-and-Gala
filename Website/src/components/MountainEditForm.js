@@ -8,7 +8,7 @@ function MountainEditForm({ mountain, onSave, onCancel }) {
     elevation: '',
     location: '',
     difficulty: 'Easy',
-    status: 'Single'
+    status: 'backtrail'
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -21,7 +21,7 @@ function MountainEditForm({ mountain, onSave, onCancel }) {
         elevation: mountain.elevation || '',
         location: mountain.location || '',
         difficulty: mountain.difficulty || 'Easy',
-        status: mountain.status || 'Single'
+        status: mountain.status || 'backtrail'
       });
     }
   }, [mountain]);
@@ -51,7 +51,8 @@ function MountainEditForm({ mountain, onSave, onCancel }) {
         description: formData.description,
         elevation: parseInt(formData.elevation),
         location: formData.location,
-        difficulty: formData.difficulty
+        difficulty: formData.difficulty,
+        status: formData.status || 'backtrail'
       };
 
       await apiService.updateMountain(mountain.id, updateData);

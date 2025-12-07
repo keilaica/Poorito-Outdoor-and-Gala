@@ -73,7 +73,7 @@ router.get('/:id', async (req, res) => {
 // Create mountain (admin only) - temporarily without auth for testing
 router.post('/', async (req, res) => {
   try {
-    const { name, elevation, location, difficulty, description, image_url, additional_images, trip_duration, base_price_per_head, joiner_capacity, exclusive_price, is_joiner_available, is_exclusive_available } = req.body;
+    const { name, elevation, location, difficulty, description, status, image_url, additional_images, trip_duration, base_price_per_head, joiner_capacity, exclusive_price, is_joiner_available, is_exclusive_available } = req.body;
     
     // Debug: Log received data
     console.log('Received mountain data:', {
@@ -99,6 +99,7 @@ router.post('/', async (req, res) => {
         location,
         difficulty,
         description,
+        status: status || 'backtrail',
         trip_duration: trip_duration || 1, // Default to 1 day if not provided
         image_url,
         additional_images: Array.isArray(additional_images) ? additional_images : [],
@@ -149,7 +150,8 @@ router.put('/:id', async (req, res) => {
       elevation, 
       location, 
       difficulty, 
-      description, 
+      description,
+      status,
       image_url,
       additional_images,
       trip_duration,
@@ -191,6 +193,7 @@ router.put('/:id', async (req, res) => {
     if (location !== undefined) updateData.location = location;
     if (difficulty !== undefined) updateData.difficulty = difficulty;
     if (description !== undefined) updateData.description = description;
+    if (status !== undefined) updateData.status = status;
     if (trip_duration !== undefined) updateData.trip_duration = parseInt(trip_duration) || 1;
     if (image_url !== undefined) updateData.image_url = image_url;
     if (base_price_per_head !== undefined) updateData.base_price_per_head = parseFloat(base_price_per_head) || 0;

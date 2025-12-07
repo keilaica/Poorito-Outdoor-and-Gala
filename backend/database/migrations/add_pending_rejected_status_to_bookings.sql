@@ -28,3 +28,5 @@ COMMENT ON COLUMN bookings.status IS 'Booking status: pending (awaiting admin ap
 COMMENT ON COLUMN bookings.rejected_at IS 'Timestamp when booking was rejected by admin';
 
 
+
+
