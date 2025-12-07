@@ -29,12 +29,25 @@ function MountainDetail() {
   const [shareMessage, setShareMessage] = useState('');
   const [availability, setAvailability] = useState(null);
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [userBookings, setUserBookings] = useState([]);
+  const [bookingsLoading, setBookingsLoading] = useState(false);
 
   useEffect(() => {
     fetchMountain();
     fetchMountainDetails();
     checkUser().catch(err => console.error('Error checking user:', err));
   }, [id]);
+
+  // Fetch user bookings when user changes or mountain ID changes
+  useEffect(() => {
+    if (user && id) {
+      fetchUserBookings();
+    } else {
+      setUserBookings([]);
+    }
+  }, [user, id]);
 
   // Auto-calculate end date based on start date and trip duration
   useEffect(() => {
@@ -173,6 +186,25 @@ function MountainDetail() {
     }
   };
 
+  const fetchUserBookings = async () => {
+    if (!user) return;
+    
+    try {
+      setBookingsLoading(true);
+      const response = await apiService.getMyBookings();
+      // Filter bookings for this specific mountain
+      const mountainBookings = (response.bookings || []).filter(
+        booking => booking.mountain_id === parseInt(id) || booking.mountains?.id === parseInt(id)
+      );
+      setUserBookings(mountainBookings);
+    } catch (err) {
+      console.error('Error fetching user bookings:', err);
+      setUserBookings([]);
+    } finally {
+      setBookingsLoading(false);
+    }
+  };
+
   // Calculate pricing based on booking type and trip duration
   const calculatePricing = () => {
     if (!mountain) return { joinerPricePerHead: 0, exclusivePrice: 0, totalPrice: 0 };
@@ -187,8 +219,9 @@ function MountainDetail() {
       joinerPricePerHead = basePricePerHead * (1 + 0.5 * (tripDuration - 1));
     }
 
-    // Calculate exclusive price
-    const exclusivePrice = joinerPricePerHead * joinerCapacity;
+    // Exclusive price comes directly from admin-set value, NOT computed
+    // This is a fixed total price set by admin per mountain
+    const exclusivePrice = parseFloat(mountain.exclusive_price) || 0;
 
     // Calculate total price
     let totalPrice = 0;
@@ -381,12 +414,46 @@ function MountainDetail() {
       }
       
       await apiService.createBooking(mountain.id, startDate, endDate, numberOfParticipants, bookingType);
-      setBookingSuccess('Booking request submitted! Your booking is now pending admin approval. You will be notified once it is confirmed.');
-      // Optionally close the modal after a short delay
+      
+      // Refresh user bookings to show the new booking
+      if (user) {
+        fetchUserBookings();
+      }
+      
+      // Format dates for display
+      const startDateFormatted = new Date(startDate).toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric' 
+      });
+      const endDateFormatted = startDate !== endDate 
+        ? new Date(endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        : null;
+      const dateRange = endDateFormatted ? `${startDateFormatted} - ${endDateFormatted}` : startDateFormatted;
+      
+      // Set success message in modal
+      setBookingSuccess(`✅ Booking Confirmed! Your booking request for ${mountain.name} has been submitted successfully. Your booking is now pending admin approval.`);
+      
+      // Show enhanced toast notification with booking details
+      const bookingTypeLabel = bookingType === 'exclusive' ? 'Exclusive Hike' : 'Joiner Hike';
+      setToastMessage(`🎉 Booking Confirmed!\n\n${mountain.name}\n${bookingTypeLabel} • ${numberOfParticipants} participant${numberOfParticipants > 1 ? 's' : ''}\n${dateRange}\n\nPending admin approval`);
+      setShowToast(true);
+      
+      // Auto-hide toast after 8 seconds (longer for user to read)
+      setTimeout(() => {
+        setShowToast(false);
+      }, 8000);
+      
+      // Close the modal after 4 seconds to give user time to see the success message
       setTimeout(() => {
         setShowBookingModal(false);
         setBookingSuccess('');
-      }, 2000);
+        // Reset form
+        setStartDate('');
+        setEndDate('');
+        setNumberOfParticipants(1);
+        setBookingType('joiner');
+      }, 4000);
     } catch (err) {
       console.error('Booking error:', err);
       const errorMessage = err.message || 'Failed to create booking';
@@ -552,6 +619,51 @@ function MountainDetail() {
                     {mountain.description || `${mountain.name} is a beautiful mountain located in ${mountain.location}. This ${mountain.difficulty.toLowerCase()} difficulty trail offers stunning views and a great hiking experience for outdoor enthusiasts.`}
                   </p>
                 </div>
+
+                {/* User Booking Status */}
+                {user && userBookings.length > 0 && (
+                  <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0">
+                        <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div className="ml-3 flex-1">
+                        <h4 className="text-sm font-semibold text-blue-900 mb-2">You have booked this mountain</h4>
+                        <div className="space-y-2">
+                          {userBookings.map((booking) => {
+                            const startDate = new Date(booking.start_date || booking.booking_date);
+                            const endDate = booking.end_date ? new Date(booking.end_date) : null;
+                            const dateRange = endDate && startDate.toDateString() !== endDate.toDateString()
+                              ? `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+                              : startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                            
+                            return (
+                              <div key={booking.id} className="text-xs text-blue-800">
+                                <div className="flex items-center gap-2">
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                    booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                                    booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                    booking.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                                    booking.status === 'rejected' ? 'bg-gray-100 text-gray-800' :
+                                    'bg-blue-100 text-blue-800'
+                                  }`}>
+                                    {booking.status}
+                                  </span>
+                                  <span className="font-medium">{dateRange}</span>
+                                  {booking.booking_type && (
+                                    <span className="text-blue-600">• {booking.booking_type === 'exclusive' ? 'Exclusive' : 'Joiner'}</span>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Quick Actions */}
                 <div className="space-y-3">
@@ -936,12 +1048,19 @@ function MountainDetail() {
               )}
 
               {bookingSuccess && (
-                <div className="bg-green-50 border-l-4 border-green-500 rounded-lg p-3">
-                  <div className="flex items-center">
-                    <svg className="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <p className="text-green-800 text-sm font-medium">{bookingSuccess}</p>
+                <div className="bg-white border-2 border-green-200 rounded-xl p-4 shadow-lg animate-scaleIn">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                        <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="ml-3 flex-1">
+                      <h4 className="text-gray-900 font-bold text-base mb-1">Booking Confirmed! 🎉</h4>
+                      <p className="text-gray-700 text-sm font-medium leading-relaxed">{bookingSuccess}</p>
+                    </div>
                   </div>
                 </div>
               )}
@@ -1164,7 +1283,7 @@ function MountainDetail() {
                       <div className="font-semibold text-gray-900 mb-1">Exclusive Hike</div>
                       <div className="text-xs text-gray-600 mb-2">Private Group</div>
                       <div className="text-xs text-gray-500">
-                        Enjoy a private hiking experience just for you and your group. No joiners will be added. The price is fixed and based on the total capacity.
+                        Enjoy a private hiking experience just for you and your group. No joiners will be added. The price is a fixed total amount set by the admin.
                       </div>
                       {mountain?.is_exclusive_available && calculatePricing().exclusivePrice > 0 && (
                         <div className="mt-2 space-y-1">
@@ -1306,13 +1425,13 @@ function MountainDetail() {
                     ) : (
                       <>
                         <div className="flex justify-between items-center py-1.5">
-                          <span className="text-sm text-gray-700 font-medium">Exclusive price (full capacity):</span>
+                          <span className="text-sm text-gray-700 font-medium">Exclusive price (fixed total):</span>
                           <span className="text-sm font-semibold text-gray-900">
                             ₱{calculatePricing().exclusivePrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
                         </div>
                         <div className="text-xs text-gray-600">
-                          Based on {mountain.joiner_capacity || 14} pax capacity
+                          Fixed price set by admin (independent of group size)
                         </div>
                       </>
                     )}
@@ -1505,6 +1624,51 @@ function MountainDetail() {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Enhanced Toast Notification - System UI Theme */}
+      {showToast && (
+        <div className="fixed top-4 right-4 z-[100] animate-slideInRight">
+          <div className="bg-white rounded-xl shadow-2xl p-5 min-w-[320px] max-w-md border border-gray-200 transform transition-all hover:shadow-3xl">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <svg className="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+              <div className="ml-4 flex-1">
+                <div className="whitespace-pre-line">
+                  <p className="text-base font-bold text-gray-900 mb-1">{toastMessage.split('\n')[0]}</p>
+                  {toastMessage.split('\n').slice(1).map((line, index) => (
+                    <p key={index} className={`text-sm ${index === 0 ? 'font-semibold' : 'font-medium'} text-gray-700 ${index > 0 ? 'mt-1' : ''}`}>
+                      {line}
+                    </p>
+                  ))}
+                </div>
+              </div>
+              <button
+                onClick={() => setShowToast(false)}
+                className="ml-3 flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors rounded-full p-1.5 hover:bg-gray-100"
+                aria-label="Close notification"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            {/* Progress bar for auto-dismiss */}
+            <div className="mt-3 h-1 bg-gray-200 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-green-500 rounded-full animate-shrink"
+                style={{
+                  animation: 'shrink 8s linear forwards'
+                }}
+              />
             </div>
           </div>
         </div>

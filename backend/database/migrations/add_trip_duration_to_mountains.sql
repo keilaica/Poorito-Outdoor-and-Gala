@@ -16,3 +16,4 @@ ALTER COLUMN trip_duration SET NOT NULL;
 
 -- Add comment for documentation
 COMMENT ON COLUMN mountains.trip_duration IS 'Number of days for the trip (default: 1 day)';
+

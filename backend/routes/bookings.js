@@ -246,7 +246,7 @@ router.post('/', authenticateToken, async (req, res) => {
     // Check if mountain exists and get pricing fields
     const { data: mountain, error: mountainError } = await supabase
       .from('mountains')
-      .select('id, name, base_price_per_head, joiner_capacity, is_joiner_available, is_exclusive_available, trip_duration')
+      .select('id, name, base_price_per_head, joiner_capacity, exclusive_price, is_joiner_available, is_exclusive_available, trip_duration')
       .eq('id', mountain_id)
       .single();
 

@@ -26,3 +26,4 @@ COMMENT ON COLUMN bookings.joiner_price_per_head IS 'Calculated joiner price per
 COMMENT ON COLUMN bookings.exclusive_price IS 'Calculated exclusive price (joiner_price_per_head * joiner_capacity)';
 COMMENT ON COLUMN bookings.total_price IS 'Total price for the booking (joiner: price_per_head * participants, exclusive: exclusive_price)';
 
+

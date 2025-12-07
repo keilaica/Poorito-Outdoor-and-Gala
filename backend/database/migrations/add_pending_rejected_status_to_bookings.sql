@@ -27,3 +27,4 @@ ADD COLUMN IF NOT EXISTS rejected_at TIMESTAMP WITH TIME ZONE;
 COMMENT ON COLUMN bookings.status IS 'Booking status: pending (awaiting admin approval), confirmed (slots/date reserved), cancelled (cancelled by user/admin), completed (trip completed), rejected (admin declined)';
 COMMENT ON COLUMN bookings.rejected_at IS 'Timestamp when booking was rejected by admin';
 
+

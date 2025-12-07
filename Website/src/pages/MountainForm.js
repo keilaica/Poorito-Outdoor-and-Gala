@@ -17,6 +17,7 @@ function MountainForm() {
     trip_duration: 1,
     base_price_per_head: 1599.00,
     joiner_capacity: 14,
+    exclusive_price: null,
     is_joiner_available: true,
     is_exclusive_available: true
   });
@@ -56,6 +57,9 @@ function MountainForm() {
           trip_duration: mountain.trip_duration || 1,
           base_price_per_head: mountain.base_price_per_head || 1599.00,
           joiner_capacity: mountain.joiner_capacity || 14,
+          exclusive_price: mountain.exclusive_price !== undefined && mountain.exclusive_price !== null 
+            ? (typeof mountain.exclusive_price === 'number' ? mountain.exclusive_price : parseFloat(mountain.exclusive_price) || null)
+            : null,
           is_joiner_available: mountain.is_joiner_available !== undefined ? mountain.is_joiner_available : true,
           is_exclusive_available: mountain.is_exclusive_available !== undefined ? mountain.is_exclusive_available : true
         });
@@ -229,6 +233,21 @@ function MountainForm() {
         return;
       }
 
+      // Validate exclusive_price if provided (must be >= 0)
+      if (formData.exclusive_price !== null && formData.exclusive_price !== undefined && formData.exclusive_price !== '') {
+        const exclusivePriceValue = parseFloat(formData.exclusive_price);
+        if (isNaN(exclusivePriceValue)) {
+          setError('Exclusive price must be a valid number');
+          setLoading(false);
+          return;
+        }
+        if (exclusivePriceValue < 0) {
+          setError('Exclusive price must be greater than or equal to 0');
+          setLoading(false);
+          return;
+        }
+      }
+
       // Prepare all mountain data including details in one call
       const mountainDetails = {
         what_to_bring: thingsToBring
@@ -304,6 +323,13 @@ function MountainForm() {
         trip_duration: parseInt(formData.trip_duration) || 1,
         base_price_per_head: parseFloat(formData.base_price_per_head) || 1599.00,
         joiner_capacity: parseInt(formData.joiner_capacity) || 14,
+        exclusive_price: (() => {
+          if (formData.exclusive_price === null || formData.exclusive_price === undefined || formData.exclusive_price === '') {
+            return null;
+          }
+          const parsed = parseFloat(formData.exclusive_price);
+          return isNaN(parsed) ? null : parsed;
+        })(),
         is_joiner_available: formData.is_joiner_available,
         is_exclusive_available: formData.is_exclusive_available,
         image_url: images[0] || null, // Send the first image as the main image
@@ -321,6 +347,9 @@ function MountainForm() {
       console.log('Sending mountain data:', {
         ...mountainData,
         image_url: images[0] ? `${images[0].substring(0, 50)}...` : 'No image',
+        exclusive_price: mountainData.exclusive_price,
+        exclusive_price_type: typeof mountainData.exclusive_price,
+        exclusive_price_raw: formData.exclusive_price,
         additional_images_count: additionalImages.length,
         additional_images_preview: additionalImages.map(img => img ? img.substring(0, 30) + '...' : 'null'),
         rightSideImages: images.slice(1).map((img, idx) => ({
@@ -657,6 +686,30 @@ function MountainForm() {
               />
               <p className="text-xs text-gray-500 mt-1">
                 Maximum number of participants for joiner hikes
+              </p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="exclusive-price" className="block text-sm font-medium text-gray-700 mb-2">
+                Exclusive Price (₱)
+              </label>
+              <input 
+                id="exclusive-price"
+                type="number" 
+                step="0.01"
+                min="0"
+                placeholder="25000.00" 
+                value={formData.exclusive_price !== null && formData.exclusive_price !== undefined ? formData.exclusive_price : ''}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // Keep as string or number, but ensure we can parse it later
+                  handleInputChange('exclusive_price', value === '' ? null : value);
+                }}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Fixed total price for exclusive hike
               </p>
             </div>
           </div>

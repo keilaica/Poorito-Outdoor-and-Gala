@@ -9,7 +9,7 @@ router.get('/', async (req, res) => {
   try {
     const { data: mountains, error } = await supabase
       .from('mountains')
-      .select('id, name, elevation, location, difficulty, description, image_url, additional_images, trip_duration, base_price_per_head, joiner_capacity, is_joiner_available, is_exclusive_available, created_at, updated_at')
+      .select('id, name, elevation, location, difficulty, description, image_url, additional_images, trip_duration, base_price_per_head, joiner_capacity, exclusive_price, is_joiner_available, is_exclusive_available, created_at, updated_at')
       .order('name', { ascending: true });
 
     if (error) {
@@ -73,7 +73,7 @@ router.get('/:id', async (req, res) => {
 // Create mountain (admin only) - temporarily without auth for testing
 router.post('/', async (req, res) => {
   try {
-    const { name, elevation, location, difficulty, description, image_url, additional_images, trip_duration, base_price_per_head, joiner_capacity, is_joiner_available, is_exclusive_available } = req.body;
+    const { name, elevation, location, difficulty, description, image_url, additional_images, trip_duration, base_price_per_head, joiner_capacity, exclusive_price, is_joiner_available, is_exclusive_available } = req.body;
     
     // Debug: Log received data
     console.log('Received mountain data:', {
@@ -104,6 +104,16 @@ router.post('/', async (req, res) => {
         additional_images: Array.isArray(additional_images) ? additional_images : [],
         base_price_per_head: base_price_per_head || 1599.00,
         joiner_capacity: joiner_capacity || 14,
+        exclusive_price: (() => {
+          if (exclusive_price === undefined || exclusive_price === null || exclusive_price === '') {
+            return null;
+          }
+          const parsedPrice = parseFloat(exclusive_price);
+          if (isNaN(parsedPrice) || parsedPrice < 0) {
+            return null; // Invalid price, set to null (will be caught by validation if needed)
+          }
+          return parsedPrice;
+        })(),
         is_joiner_available: is_joiner_available !== undefined ? is_joiner_available : true,
         is_exclusive_available: is_exclusive_available !== undefined ? is_exclusive_available : true,
         created_at: new Date().toISOString(),
@@ -145,6 +155,7 @@ router.put('/:id', async (req, res) => {
       trip_duration,
       base_price_per_head,
       joiner_capacity,
+      exclusive_price,
       is_joiner_available,
       is_exclusive_available,
       what_to_bring,
@@ -154,6 +165,13 @@ router.put('/:id', async (req, res) => {
     } = req.body;
 
     console.log('Attempting to update mountain:', id, { name, elevation, location });
+    console.log('Received pricing data:', {
+      base_price_per_head,
+      joiner_capacity,
+      exclusive_price,
+      is_joiner_available,
+      is_exclusive_available
+    });
     console.log('Received additional_images:', {
       isArray: Array.isArray(additional_images),
       length: additional_images ? additional_images.length : 0,
@@ -177,6 +195,62 @@ router.put('/:id', async (req, res) => {
     if (image_url !== undefined) updateData.image_url = image_url;
     if (base_price_per_head !== undefined) updateData.base_price_per_head = parseFloat(base_price_per_head) || 0;
     if (joiner_capacity !== undefined) updateData.joiner_capacity = parseInt(joiner_capacity) || 14;
+    // Handle exclusive_price: allow null, 0, or any positive number
+    // Always process exclusive_price if it's provided (including 0 and null)
+    if (exclusive_price !== undefined) {
+      try {
+        if (exclusive_price === null || exclusive_price === '' || exclusive_price === 'null' || exclusive_price === 'undefined') {
+          updateData.exclusive_price = null;
+        } else {
+          // Handle both string and number inputs
+          let parsedPrice;
+          if (typeof exclusive_price === 'number') {
+            parsedPrice = exclusive_price;
+          } else if (typeof exclusive_price === 'string') {
+            // Remove any whitespace
+            const trimmed = exclusive_price.trim();
+            if (trimmed === '' || trimmed === 'null' || trimmed === 'undefined') {
+              updateData.exclusive_price = null;
+            } else {
+              parsedPrice = parseFloat(trimmed);
+            }
+          } else {
+            parsedPrice = parseFloat(exclusive_price);
+          }
+          
+          // Only validate if we have a parsed price (not null)
+          if (updateData.exclusive_price === undefined && parsedPrice !== undefined) {
+            if (isNaN(parsedPrice)) {
+              return res.status(400).json({ 
+                error: 'Invalid exclusive price',
+                details: `Exclusive price must be a valid number. Received: ${exclusive_price} (type: ${typeof exclusive_price})`
+              });
+            }
+            if (parsedPrice < 0) {
+              return res.status(400).json({ 
+                error: 'Invalid exclusive price',
+                details: 'Exclusive price must be greater than or equal to 0'
+              });
+            }
+            updateData.exclusive_price = parsedPrice;
+          }
+        }
+        console.log('Setting exclusive_price:', {
+          received: exclusive_price,
+          receivedType: typeof exclusive_price,
+          setting: updateData.exclusive_price,
+          settingType: typeof updateData.exclusive_price
+        });
+      } catch (parseError) {
+        console.error('Error parsing exclusive_price:', parseError);
+        return res.status(400).json({ 
+          error: 'Invalid exclusive price',
+          details: `Failed to parse exclusive price: ${parseError.message}`
+        });
+      }
+    } else {
+      console.log('exclusive_price not provided in request (undefined)');
+    }
     if (is_joiner_available !== undefined) updateData.is_joiner_available = is_joiner_available;
     if (is_exclusive_available !== undefined) updateData.is_exclusive_available = is_exclusive_available;
     
@@ -223,25 +297,56 @@ router.put('/:id', async (req, res) => {
     if (error) {
       console.error('Update mountain error:', error);
       console.error('Error details:', JSON.stringify(error, null, 2));
+      console.error('Update data that caused error:', JSON.stringify(updateData, null, 2));
       
       // Check if error is about missing column
-      if (error.message && error.message.includes('additional_images')) {
-        console.error('⚠️ CRITICAL: additional_images column does not exist!');
+      if (error.message && (error.message.includes('additional_images') || error.message.includes('column') && error.message.includes('does not exist'))) {
+        const missingColumn = error.message.includes('additional_images') ? 'additional_images' : 
+                             error.message.includes('exclusive_price') ? 'exclusive_price' : 'unknown';
+        console.error(`⚠️ CRITICAL: ${missingColumn} column does not exist!`);
         console.error('⚠️ Please run the migration SQL in Supabase:');
-        console.error('⚠️ ALTER TABLE mountains ADD COLUMN IF NOT EXISTS additional_images JSONB DEFAULT \'[]\'::jsonb;');
+        let migrationSQL = '';
+        if (missingColumn === 'additional_images') {
+          migrationSQL = 'ALTER TABLE mountains ADD COLUMN IF NOT EXISTS additional_images JSONB DEFAULT \'[]\'::jsonb;';
+        } else if (missingColumn === 'exclusive_price') {
+          migrationSQL = 'ALTER TABLE mountains ADD COLUMN IF NOT EXISTS exclusive_price DECIMAL(10, 2) DEFAULT NULL CHECK (exclusive_price >= 0);';
+        }
         return res.status(500).json({ 
           error: 'Database column missing',
-          message: 'The additional_images column does not exist. Please run the migration SQL first.',
+          message: `The ${missingColumn} column does not exist. Please run the migration SQL first.`,
           details: error.message,
-          migration_sql: 'ALTER TABLE mountains ADD COLUMN IF NOT EXISTS additional_images JSONB DEFAULT \'[]\'::jsonb;'
+          migration_sql: migrationSQL
+        });
+      }
+      
+      // Check for constraint violations
+      if (error.message && error.message.includes('violates check constraint')) {
+        console.error('⚠️ Constraint violation detected');
+        return res.status(400).json({ 
+          error: 'Validation error',
+          message: 'One or more values violate database constraints',
+          details: error.message,
+          hint: error.hint
+        });
+      }
+      
+      // Check for type mismatches
+      if (error.message && (error.message.includes('invalid input syntax') || error.message.includes('type'))) {
+        console.error('⚠️ Type mismatch detected');
+        return res.status(400).json({ 
+          error: 'Type error',
+          message: 'Invalid data type for one or more fields',
+          details: error.message,
+          hint: error.hint
         });
       }
       
       return res.status(500).json({ 
         error: 'Failed to update mountain',
-        details: error.message,
+        details: error.message || 'Unknown database error',
         code: error.code,
-        hint: error.hint
+        hint: error.hint,
+        fullError: process.env.NODE_ENV !== 'production' ? JSON.stringify(error, null, 2) : undefined
       });
     }
 
@@ -250,6 +355,7 @@ router.put('/:id', async (req, res) => {
     console.log('Mountain updated successfully:', {
       id: savedMountain ? savedMountain.id : 'unknown',
       name: savedMountain ? savedMountain.name : 'unknown',
+      exclusive_price: savedMountain ? savedMountain.exclusive_price : 'not found',
       has_image_url: !!(savedMountain && savedMountain.image_url),
       additional_images_sent: updateData.additional_images.length,
       additional_images_saved: savedMountain && savedMountain.additional_images
@@ -284,7 +390,33 @@ router.put('/:id', async (req, res) => {
     });
   } catch (error) {
     console.error('Update mountain catch error:', error);
-    res.status(500).json({ error: 'Failed to update mountain', details: error.message });
+    console.error('Error stack:', error.stack);
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    
+    // Check if it's a database connection error
+    if (error.message && (error.message.includes('connect') || error.message.includes('ECONNREFUSED'))) {
+      return res.status(503).json({ 
+        error: 'Database connection failed',
+        details: 'Unable to connect to the database. Please check your database configuration.',
+        message: error.message
+      });
+    }
+    
+    // Check if it's a validation error
+    if (error.name === 'ValidationError' || error.message.includes('validation')) {
+      return res.status(400).json({ 
+        error: 'Validation error',
+        details: error.message
+      });
+    }
+    
+    return res.status(500).json({ 
+      error: 'Failed to update mountain',
+      details: error.message || 'An unexpected error occurred',
+      errorType: error.name,
+      ...(process.env.NODE_ENV !== 'production' && { stack: error.stack })
+    });
   }
 });
 

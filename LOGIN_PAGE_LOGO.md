@@ -2,7 +2,7 @@
 
 ## ✅ What Was Added
 
-Your **poorito-logo.jpg** is now beautifully displayed on the login page!
+Your **poorito-logo.png** is now beautifully displayed on the login page!
 
 ---
 
@@ -88,7 +88,7 @@ mb-4               /* Bottom margin */
 ### Image Source:
 ```jsx
 <img
-  src="/poorito-logo.jpg"
+  src="/poorito-logo.png"
   alt="Poorito"
   className="w-32 h-32 mx-auto object-contain rounded-full 
              shadow-2xl mb-4 ring-4 ring-orange-100"

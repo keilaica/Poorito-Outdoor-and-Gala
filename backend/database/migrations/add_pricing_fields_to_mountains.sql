@@ -40,3 +40,4 @@ COMMENT ON COLUMN mountains.joiner_capacity IS 'Maximum number of participants f
 COMMENT ON COLUMN mountains.is_joiner_available IS 'Whether joiner (shared group) hikes are available for this mountain';
 COMMENT ON COLUMN mountains.is_exclusive_available IS 'Whether exclusive (private group) hikes are available for this mountain';
 
+

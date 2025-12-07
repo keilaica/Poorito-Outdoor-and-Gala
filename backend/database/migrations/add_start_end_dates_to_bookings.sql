@@ -34,3 +34,4 @@ CREATE INDEX IF NOT EXISTS idx_bookings_end_date ON bookings(end_date);
 -- Update the unique constraint to check for overlapping date ranges
 -- Note: This is a simplified approach. For production, you might want a more sophisticated overlap check
 -- The existing unique constraint on (user_id, mountain_id, booking_date) is kept for backward compatibility
+

@@ -9,3 +9,4 @@ DELETE FROM bookings;
 -- Uncomment the line below if you want to reset the auto-increment counter
 -- ALTER SEQUENCE bookings_id_seq RESTART WITH 1;
 
+
