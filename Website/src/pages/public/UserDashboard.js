@@ -142,7 +142,7 @@ function UserDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-orange-50/30 to-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
           <div className="relative">
             <div className="animate-spin rounded-full h-16 w-16 border-4 border-orange-200 border-t-orange-600 mx-auto mb-6"></div>
@@ -158,7 +158,7 @@ function UserDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-orange-50/30 to-slate-50">
+    <div className="min-h-screen bg-slate-50">
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200/50 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -172,15 +172,13 @@ function UserDashboard() {
                   onError={(e) => {
                     e.target.style.display = 'none';
                     const fallback = document.createElement('div');
-                    fallback.className = 'w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center mr-3 shadow-md group-hover:shadow-lg transition-all duration-300';
+                    fallback.className = 'w-12 h-12 bg-orange-600 rounded-xl flex items-center justify-center mr-3 shadow-md group-hover:shadow-lg transition-all duration-300';
                     fallback.innerHTML = '<span class="text-white font-bold text-sm">P</span>';
                     e.target.parentElement?.appendChild(fallback);
                   }}
                 />
               </div>
-              <h1 className="text-2xl font-extrabold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent tracking-tight">
-                Poorito
-              </h1>
+              <h1 className="text-2xl font-extrabold text-orange-600 tracking-tight">Poorito</h1>
             </div>
             
             <div className="flex items-center space-x-4">
@@ -232,7 +230,7 @@ function UserDashboard() {
 
         {/* Bookings Section */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200/50 overflow-hidden">
-          <div className="px-8 py-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+          <div className="px-8 py-6 border-b border-gray-200 bg-gray-50">
             <h3 className="text-2xl font-bold text-gray-900 mb-1">My Bookings</h3>
             <p className="text-sm text-gray-600 font-medium">Manage your trail bookings</p>
           </div>
@@ -254,7 +252,7 @@ function UserDashboard() {
                 <p className="text-gray-600 mb-8 text-lg">Start exploring trails and book your first adventure!</p>
                 <button
                   onClick={() => navigate('/explore')}
-                  className="px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all duration-300 font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
+                  className="px-8 py-4 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition-all duration-300 font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                   Explore Trails
                 </button>
@@ -264,7 +262,7 @@ function UserDashboard() {
                 {bookings.map((booking) => (
                   <div 
                     key={booking.id} 
-                    className="border border-gray-200 rounded-2xl p-6 hover:shadow-xl hover:border-orange-200 transition-all duration-300 bg-gradient-to-r from-white to-gray-50/50 group"
+                    className="border border-gray-200 rounded-2xl p-6 hover:shadow-xl hover:border-orange-200 transition-all duration-300 bg-white group"
                   >
                     <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
                       <div className="flex-1">
@@ -276,7 +274,7 @@ function UserDashboard() {
                               className="w-24 h-24 rounded-xl object-cover shadow-md group-hover:shadow-lg transition-shadow duration-300"
                             />
                           ) : (
-                            <div className="w-24 h-24 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow duration-300">
+                            <div className="w-24 h-24 bg-orange-600 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow duration-300">
                               <span className="text-white text-3xl">⛰️</span>
                             </div>
                           )}
@@ -364,7 +362,7 @@ function UserDashboard() {
                 </button>
               </div>
 
-              <div className="mb-8 rounded-xl bg-gradient-to-br from-gray-50 to-white border-2 border-gray-200 p-5 shadow-sm">
+              <div className="mb-8 rounded-xl bg-gray-50 border-2 border-gray-200 p-5 shadow-sm">
                 <p className="font-bold text-lg text-gray-900 mb-3">
                   {bookingToCancel.mountains?.name || 'Selected trail'}
                 </p>
@@ -395,7 +393,7 @@ function UserDashboard() {
                   type="button"
                   onClick={handleConfirmCancel}
                   disabled={cancelLoading}
-                  className="px-6 py-3 text-sm font-bold text-white bg-gradient-to-r from-red-600 to-red-700 rounded-xl hover:from-red-700 hover:to-red-800 transition-all duration-200 disabled:opacity-60 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  className="px-6 py-3 text-sm font-bold text-white bg-red-700 rounded-xl hover:bg-red-800 transition-all duration-200 disabled:opacity-60 shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                   {cancelLoading ? (
                     <span className="flex items-center gap-2">

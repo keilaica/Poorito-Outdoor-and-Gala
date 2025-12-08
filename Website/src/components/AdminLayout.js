@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useNavigationGuard } from '../contexts/NavigationGuard';
 import apiService from '../services/api';
 
 function AdminLayout() {
@@ -50,7 +51,7 @@ function AdminLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-[#F8F5F1] flex flex-col">
       {/* Admin Header */}
       <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -63,7 +64,7 @@ function AdminLayout() {
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
                 const fallback = document.createElement('div');
-                fallback.className = 'w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 shadow-sm flex items-center justify-center';
+                fallback.className = 'w-10 h-10 rounded-full bg-orange-600 shadow-sm flex items-center justify-center';
                 fallback.innerHTML = '<span class="text-white font-bold text-sm">P</span>';
                 e.currentTarget.parentElement?.prepend(fallback);
               }}
@@ -142,7 +143,7 @@ function AdminLayout() {
                 onClick={() => setShowUserMenu(!showUserMenu)}
                 className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
               >
-                <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white text-sm">
+                <div className="w-8 h-8 bg-orange-600 rounded-full flex items-center justify-center text-white text-sm">
                   {user?.username?.charAt(0).toUpperCase() || 'A'}
                 </div>
                 <span className="hidden md:block">{user?.username || 'Admin'}</span>

@@ -35,7 +35,7 @@ function Sidebar() {
           }}
         />
         <div className="hidden flex-col items-center justify-center">
-          <div className="w-28 h-28 bg-gradient-to-br from-primary to-primary-dark rounded-full flex items-center justify-center shadow-xl">
+          <div className="w-28 h-28 bg-primary rounded-full flex items-center justify-center shadow-xl">
             <span className="text-white font-bold text-base text-center">POORITO</span>
           </div>
         </div>
@@ -48,7 +48,7 @@ function Sidebar() {
             to={item.path}
             className={`flex items-center px-6 py-3 transition-all duration-200 border-l-4 ${
               location.pathname === item.path 
-                ? 'bg-gradient-to-r from-primary to-primary-dark text-white border-primary-dark shadow-md' 
+                ? 'bg-primary text-white border-primary-dark shadow-md' 
                 : 'text-gray-700 hover:bg-gray-50 hover:text-primary border-transparent'
             }`}
           >
@@ -68,7 +68,7 @@ function Sidebar() {
         <div className="space-y-2">
           <button
             onClick={() => navigate('/')}
-            className="w-full flex items-center justify-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:shadow-lg transition-all text-sm font-medium"
+            className="w-full flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:shadow-lg transition-all text-sm font-medium"
           >
             <span className="mr-2">🌐</span>
             View Public Site

@@ -114,7 +114,7 @@ function Guides() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50">
+    <div className="min-h-screen" style={{ backgroundColor: '#F8F5F1' }}>
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12 lg:py-16">
         {/* Hero */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8 mb-12">
@@ -131,7 +131,7 @@ function Guides() {
             </p>
           </div>
           <div className="w-full lg:w-auto">
-            <div className="rounded-2xl bg-gradient-to-br from-orange-500 via-orange-500 to-orange-600 px-7 py-6 shadow-lg text-white flex items-center gap-4">
+            <div className="rounded-2xl bg-orange-600 px-7 py-6 shadow-lg text-white flex items-center gap-4">
               <div className="text-4xl">🛡️</div>
               <div>
                 <p className="text-sm font-semibold uppercase tracking-wide text-orange-100 mb-1">
@@ -153,7 +153,7 @@ function Guides() {
               className="bg-white border border-gray-100 rounded-2xl p-6 md:p-7 shadow-sm hover:shadow-xl hover:border-orange-300 transition-all duration-300 group"
             >
               <div
-                className={`w-12 h-12 rounded-xl bg-gradient-to-br ${s.tone} flex items-center justify-center text-2xl text-white mb-4 group-hover:scale-110 transition-transform shadow-md`}
+                className="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center text-2xl text-white mb-4 group-hover:scale-110 transition-transform shadow-md"
               >
                 {s.icon}
               </div>
@@ -198,7 +198,7 @@ function Guides() {
               return (
                 <div key={category} className="mb-10">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${style.color} flex items-center justify-center text-xl text-white shadow-md`}>
+                    <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center text-xl text-white shadow-md">
                       {style.icon}
                     </div>
                     <h3 className="text-xl md:text-2xl font-bold text-gray-900">{category} Articles</h3>
@@ -227,7 +227,7 @@ function Guides() {
                           </div>
                         ) : (
                           <div className={`relative h-48 ${style.bgColor} flex items-center justify-center`}>
-                            <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${style.color} flex items-center justify-center text-3xl text-white shadow-md`}>
+                            <div className="w-16 h-16 rounded-xl bg-orange-500 flex items-center justify-center text-3xl text-white shadow-md">
                               {style.icon}
                             </div>
                             <div className="absolute top-3 right-3">
@@ -364,7 +364,7 @@ function Guides() {
         </div>
 
         {/* CTA */}
-        <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-3xl p-8 md:p-10 text-white flex flex-col md:flex-row md:items-center md:justify-between gap-6 shadow-lg">
+        <div className="bg-orange-600 rounded-3xl p-8 md:p-10 text-white flex flex-col md:flex-row md:items-center md:justify-between gap-6 shadow-lg">
           <div>
             <h3 className="text-2xl md:text-3xl font-extrabold mb-2">
               Ready to put these guides into practice?
@@ -383,7 +383,7 @@ function Guides() {
             </a>
             <a
               href="/about"
-              className="px-6 py-3 rounded-xl border border-orange-200 text-white font-semibold hover:bg-orange-600/20 transition-all"
+              className="px-6 py-3 rounded-xl border border-orange-200 text-white font-semibold hover:bg-orange-500/20 transition-all"
             >
               Learn about Poorito
             </a>
@@ -470,7 +470,7 @@ function Guides() {
                     href={selectedArticle.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transition-all"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-orange-600 text-white font-semibold hover:bg-orange-700 shadow-md hover:shadow-lg transition-all"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />

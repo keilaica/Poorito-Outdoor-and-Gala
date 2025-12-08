@@ -54,7 +54,7 @@ function PublicLayout() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 relative">
+    <div className="min-h-screen flex flex-col bg-[#F8F5F1] relative">
       {/* Mobile Menu Overlay */}
       {showMobileMenu && (
         <div 
@@ -94,12 +94,12 @@ function PublicLayout() {
                 onError={(e)=>{
                   e.currentTarget.style.display='none';
                   const fallback=document.createElement('div');
-                  fallback.className='w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-primary to-primary-dark shadow-md flex items-center justify-center';
+                  fallback.className='w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-orange-600 shadow-md flex items-center justify-center';
                   fallback.innerHTML='<span class="text-white font-bold text-xs sm:text-sm">P</span>';
                   e.currentTarget.parentElement?.prepend(fallback);
                 }}
               />
-              <span className="font-extrabold text-xl sm:text-2xl tracking-tight bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">Poorito</span>
+              <span className="font-extrabold text-xl sm:text-2xl tracking-tight text-orange-700">Poorito</span>
             </Link>
           </div>
 
@@ -160,7 +160,7 @@ function PublicLayout() {
                   className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors touch-manipulation min-h-[44px] min-w-[44px]"
                   aria-label="User menu"
                 >
-                  <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white text-sm flex-shrink-0">
+                  <div className="w-8 h-8 bg-orange-600 rounded-full flex items-center justify-center text-white text-sm flex-shrink-0">
                     {user.username?.charAt(0).toUpperCase() || 'U'}
                   </div>
                   <span className="hidden sm:block">{user.username}</span>
@@ -235,13 +235,13 @@ function PublicLayout() {
               decoding="async"
               onError={(e)=>{
                 e.currentTarget.style.display='none';
-                const fallback=document.createElement('div');
-                fallback.className='w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 shadow-sm flex items-center justify-center';
-                fallback.innerHTML='<span class="text-white font-bold text-sm">P</span>';
+                  const fallback=document.createElement('div');
+                  fallback.className='w-10 h-10 rounded-full bg-orange-600 shadow-sm flex items-center justify-center';
+                  fallback.innerHTML='<span class="text-white font-bold text-sm">P</span>';
                 e.currentTarget.parentElement?.prepend(fallback);
               }}
             />
-            <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">Poorito</span>
+            <span className="font-extrabold text-xl tracking-tight text-orange-700">Poorito</span>
           </div>
           <button
             onClick={() => setShowMobileMenu(false)}
@@ -258,7 +258,7 @@ function PublicLayout() {
         {user && (
           <div className="px-4 py-4 border-b border-gray-200">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+              <div className="w-10 h-10 bg-orange-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
                 {user.username?.charAt(0).toUpperCase() || 'U'}
               </div>
               <div className="flex-1 min-w-0">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import apiService from '../services/api';
 
@@ -15,7 +15,6 @@ function MountainForm() {
     difficulty: 'Easy',
     status: 'backtrail',
     trip_duration: 1,
-    meters_above_sea_level: '',
     duration: '',
     distance_km: '',
     base_price_per_head: 1599.00,
@@ -35,11 +34,152 @@ function MountainForm() {
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(false);
   const [error, setError] = useState(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState(null);
+  const isInitialLoad = useRef(true);
+  const formInitialState = useRef(null);
+  const isNavigatingRef = useRef(false);
+  const errorRef = useRef(null);
+
+  // Create a wrapper for navigate that checks for unsaved changes
+  const navigateWithCheck = (path, options) => {
+    if (hasUnsavedChanges && !isNavigatingRef.current) {
+      setPendingNavigation({ path, options });
+      setShowLeaveConfirm(true);
+      return;
+    }
+    isNavigatingRef.current = true;
+    navigate(path, options);
+  };
+
+  // Handle confirmation to leave
+  const handleConfirmLeave = () => {
+    setShowLeaveConfirm(false);
+    isNavigatingRef.current = true;
+    if (pendingNavigation) {
+      if (pendingNavigation.path === 'back') {
+        // Handle browser back navigation
+        window.history.back();
+      } else {
+        navigate(pendingNavigation.path, pendingNavigation.options);
+      }
+      setPendingNavigation(null);
+    }
+  };
+
+  // Handle cancel leaving
+  const handleCancelLeave = () => {
+    setShowLeaveConfirm(false);
+    setPendingNavigation(null);
+  };
+
+  // Track form changes
+  useEffect(() => {
+    if (isInitialLoad.current) {
+      // Set initial state after data is loaded
+      setTimeout(() => {
+        formInitialState.current = {
+          formData: JSON.stringify(formData),
+          images: JSON.stringify(images),
+          thingsToBring: JSON.stringify(thingsToBring),
+          hikeItinerary: JSON.stringify(hikeItinerary),
+          fees: JSON.stringify(fees)
+        };
+        isInitialLoad.current = false;
+      }, 100);
+      return;
+    }
+
+    // Check if form has changed
+    const currentState = {
+      formData: JSON.stringify(formData),
+      images: JSON.stringify(images),
+      thingsToBring: JSON.stringify(thingsToBring),
+      hikeItinerary: JSON.stringify(hikeItinerary),
+      fees: JSON.stringify(fees)
+    };
+
+    const hasChanged = formInitialState.current && 
+      JSON.stringify(currentState) !== JSON.stringify(formInitialState.current);
+    
+    setHasUnsavedChanges(hasChanged);
+  }, [formData, images, thingsToBring, hikeItinerary, fees]);
+
+  // Handle browser back/close/refresh
+  useEffect(() => {
+    if (!hasUnsavedChanges) {
+      return;
+    }
+
+    const handleBeforeUnload = (e) => {
+      if (!isNavigatingRef.current) {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    };
+
+    // Handle browser back/forward buttons
+    const handlePopState = (e) => {
+      if (!isNavigatingRef.current) {
+        // Immediately push state back to prevent navigation
+        window.history.pushState(null, '', window.location.pathname);
+        
+        // Show custom confirmation modal
+        setPendingNavigation({ path: 'back', options: null });
+        setShowLeaveConfirm(true);
+        // If user cancels, we've already pushed the state back, so they stay on the page
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [hasUnsavedChanges]);
+
+  // Set up history state tracking (only once on mount)
+  useEffect(() => {
+    // Push a state when component mounts to enable popstate detection
+    window.history.pushState(null, '', window.location.pathname);
+    
+    return () => {
+      // Reset navigation flag when component unmounts
+      isNavigatingRef.current = false;
+    };
+  }, []);
+
+  // Scroll to top when error occurs
+  useEffect(() => {
+    if (error && errorRef.current) {
+      // Scroll to the error message smoothly
+      errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Also scroll window to top as fallback
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [error]);
 
   // Load mountain data if editing
   useEffect(() => {
     const loadMountainData = async () => {
-      if (!isEdit || !id) return;
+      if (!isEdit || !id) {
+        // For new mountain, set initial state after component mounts
+        setTimeout(() => {
+          formInitialState.current = {
+            formData: JSON.stringify(formData),
+            images: JSON.stringify(images),
+            thingsToBring: JSON.stringify(thingsToBring),
+            hikeItinerary: JSON.stringify(hikeItinerary),
+            fees: JSON.stringify(fees)
+          };
+          isInitialLoad.current = false;
+        }, 100);
+        return;
+      }
       
       try {
         setLoadingData(true);
@@ -57,7 +197,6 @@ function MountainForm() {
           difficulty: mountain.difficulty || 'Easy',
           status: mountain.status || 'backtrail',
           trip_duration: mountain.trip_duration || 1,
-          meters_above_sea_level: mountain.meters_above_sea_level || '',
           duration: mountain.duration || '',
           distance_km: mountain.distance_km != null && mountain.distance_km !== '' ? mountain.distance_km : '',
           base_price_per_head: mountain.base_price_per_head || 1599.00,
@@ -137,6 +276,18 @@ function MountainForm() {
         }
         
         console.log('✅ Mountain data loading completed for all sections');
+        
+        // Set initial state after data is loaded
+        setTimeout(() => {
+          formInitialState.current = {
+            formData: JSON.stringify(formData),
+            images: JSON.stringify(images),
+            thingsToBring: JSON.stringify(thingsToBring),
+            hikeItinerary: JSON.stringify(hikeItinerary),
+            fees: JSON.stringify(fees)
+          };
+          isInitialLoad.current = false;
+        }, 100);
       }
       } catch (err) {
         console.error('Error loading mountain:', err);
@@ -215,7 +366,7 @@ function MountainForm() {
 
       // Validate required fields
       if (!formData.name || !formData.location || !formData.elevation) {
-        setError('Please fill in all required fields (Name, Location, Distance)');
+        setError('Please fill in all required fields (Name, Location, Elevation)');
         setLoading(false);
         return;
       }
@@ -339,9 +490,6 @@ function MountainForm() {
         difficulty: formData.difficulty,
         status: formData.status || 'backtrail',
         trip_duration: parseInt(formData.trip_duration) || 1,
-        meters_above_sea_level: (formData.meters_above_sea_level === '' || formData.meters_above_sea_level === null || formData.meters_above_sea_level === undefined)
-          ? null
-          : (isNaN(parseInt(formData.meters_above_sea_level)) ? null : parseInt(formData.meters_above_sea_level)),
         duration: (formData.duration === '' || formData.duration === null || formData.duration === undefined) ? null : formData.duration.trim(),
         distance_km: (formData.distance_km === '' || formData.distance_km === null || formData.distance_km === undefined)
           ? null
@@ -442,6 +590,10 @@ function MountainForm() {
         mountainId = response.mountain.id;
       }
 
+      // Reset unsaved changes flag before navigation
+      setHasUnsavedChanges(false);
+      isNavigatingRef.current = true;
+      
       navigate('/admin/mountains', {
         state: {
           success: isEdit
@@ -489,14 +641,14 @@ function MountainForm() {
         <h1 className="text-4xl font-bold text-gray-900">{isEdit ? 'Edit Mountain' : 'Add New Mountain'}</h1>
         <button 
           className="flex items-center gap-2 text-gray-600 hover:text-primary transition-colors text-sm font-medium"
-          onClick={() => navigate('/admin/mountains')}
+          onClick={() => navigateWithCheck('/admin/mountains')}
         >
           ← Back to manage mountains
         </button>
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <div ref={errorRef} className="bg-red-50 border border-red-200 rounded-lg p-4">
           <div className="flex items-center">
             <div className="text-red-500 text-2xl mr-3">⚠️</div>
             <div>
@@ -525,7 +677,7 @@ function MountainForm() {
                   </button>
                 </div>
               ) : (
-                <div className="aspect-video bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-blue-300 hover:border-primary transition-colors">
+                <div className="aspect-video bg-blue-50 rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-blue-300 hover:border-primary transition-colors">
                   <div className="text-6xl mb-2">☁️</div>
                   <div className="text-6xl">⛰️</div>
                   <p className="text-gray-500 mt-4">Click to upload main image</p>
@@ -557,7 +709,7 @@ function MountainForm() {
                       </button>
                     </div>
                   ) : (
-                    <div className="aspect-video bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300 hover:border-primary transition-colors">
+                    <div className="aspect-video bg-gray-50 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300 hover:border-primary transition-colors">
                       <span className="text-3xl text-gray-400">+</span>
                     </div>
                   )}
@@ -676,19 +828,6 @@ function MountainForm() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="mountain-meters-above-sea-level" className="block text-sm font-medium text-gray-700 mb-2">
-              Meters above sea level
-            </label>
-            <input 
-              id="mountain-meters-above-sea-level"
-              type="number" 
-              placeholder="Meters above sea level" 
-              value={formData.meters_above_sea_level}
-              onChange={(e) => handleInputChange('meters_above_sea_level', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-            />
-          </div>
-          <div>
             <label htmlFor="mountain-duration" className="block text-sm font-medium text-gray-700 mb-2">
               Duration
             </label>
@@ -704,9 +843,7 @@ function MountainForm() {
               Hike duration (e.g., "10-14 hours" or "10 hours")
             </p>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label htmlFor="mountain-distance-km" className="block text-sm font-medium text-gray-700 mb-2">
               Distance (KM)
@@ -728,7 +865,7 @@ function MountainForm() {
         </div>
 
         {/* Trip Duration */}
-        <div>
+        <div className="max-w-sm">
           <label htmlFor="mountain-trip-duration" className="block text-sm font-medium text-gray-700 mb-2">
             Trip Duration (days) <span className="text-red-500">*</span>
           </label>
@@ -740,7 +877,7 @@ function MountainForm() {
             placeholder="Trip Duration (days)" 
             value={formData.trip_duration}
             onChange={(e) => handleInputChange('trip_duration', parseInt(e.target.value) || 1)}
-            className="w-full max-w-xs px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
           />
           <p className="text-xs text-gray-500 mt-1">
             Number of days for the trip. End date will be automatically calculated as Start Date + Trip Duration.
@@ -863,7 +1000,7 @@ function MountainForm() {
             ))}
             <button 
               onClick={addThingToBring}
-              className="w-12 h-12 bg-gradient-to-r from-secondary to-green-600 hover:from-secondary hover:to-green-700 text-white rounded-lg text-2xl font-bold transition-all shadow-sm hover:shadow-md"
+              className="w-12 h-12 bg-secondary hover:bg-green-700 text-white rounded-lg text-2xl font-bold transition-all shadow-sm hover:shadow-md"
             >
               +
             </button>
@@ -991,7 +1128,7 @@ function MountainForm() {
           ))}
           <button 
             onClick={addHikeItinerary}
-            className="w-12 h-12 bg-gradient-to-r from-secondary to-green-600 hover:from-secondary hover:to-green-700 text-white rounded-lg text-2xl font-bold transition-all shadow-sm hover:shadow-md"
+            className="w-12 h-12 bg-secondary hover:bg-green-700 text-white rounded-lg text-2xl font-bold transition-all shadow-sm hover:shadow-md"
           >
             +
           </button>
@@ -1001,7 +1138,7 @@ function MountainForm() {
           <button 
             onClick={handleSave}
             disabled={loading}
-            className="px-12 py-3 bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary text-white rounded-lg font-semibold text-lg transition-all shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            className="px-12 py-3 bg-primary hover:bg-primary-dark text-white rounded-lg font-semibold text-lg transition-all shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           >
             {loading ? (
               <div className="flex items-center gap-2">
@@ -1014,6 +1151,50 @@ function MountainForm() {
           </button>
         </div>
       </div>
+
+      {/* Unsaved Changes Confirmation Modal */}
+      {showLeaveConfirm && (
+        <div 
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn"
+          onClick={handleCancelLeave}
+        >
+          <div 
+            className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 border border-primary/20 animate-scaleIn"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3 mb-4">
+              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xl font-semibold">
+                !
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900">
+                  Leave this page?
+                </h3>
+                <p className="text-gray-700 text-base mt-1">
+                  Changes you made may not be saved.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={handleCancelLeave}
+                className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmLeave}
+                className="px-5 py-2.5 text-sm font-semibold text-white bg-primary rounded-lg hover:bg-primary-dark transition-all shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-white"
+              >
+                Leave
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

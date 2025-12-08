@@ -201,7 +201,7 @@ function ArticlesGuides() {
                 filteredArticles.map((article) => (
                   <tr key={article.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-orange-50 rounded-lg flex items-center justify-center text-2xl shadow-sm">
+                      <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center text-2xl shadow-sm">
                         {article.image_url ? (
                           <img src={article.image_url} alt={article.title} className="w-full h-full object-cover rounded-lg" />
                         ) : (

@@ -3,9 +3,9 @@ import React from 'react';
 function About() {
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen" style={{ backgroundColor: '#F8F5F1' }}>
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white py-20">
+      <div className="bg-orange-600 text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-extrabold mb-4">About Poorito</h1>
@@ -87,7 +87,7 @@ function About() {
         <div className="mb-20">
           <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">What We Offer</h2>
           <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-gradient-to-br from-orange-50 to-white rounded-2xl p-8 border border-orange-100">
+            <div className="bg-orange-50 rounded-2xl p-8 border border-orange-100">
               <div className="flex items-start gap-4">
                 <div className="text-4xl">📍</div>
                 <div>
@@ -99,7 +99,7 @@ function About() {
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-orange-50 to-white rounded-2xl p-8 border border-orange-100">
+            <div className="bg-orange-50 rounded-2xl p-8 border border-orange-100">
               <div className="flex items-start gap-4">
                 <div className="text-4xl">📖</div>
                 <div>
@@ -111,7 +111,7 @@ function About() {
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-orange-50 to-white rounded-2xl p-8 border border-orange-100">
+            <div className="bg-orange-50 rounded-2xl p-8 border border-orange-100">
               <div className="flex items-start gap-4">
                 <div className="text-4xl">🔍</div>
                 <div>
@@ -123,7 +123,7 @@ function About() {
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-orange-50 to-white rounded-2xl p-8 border border-orange-100">
+            <div className="bg-orange-50 rounded-2xl p-8 border border-orange-100">
               <div className="flex items-start gap-4">
                 <div className="text-4xl">📸</div>
                 <div>
@@ -148,7 +148,7 @@ function About() {
           <div className="flex flex-wrap gap-4 justify-center">
             <a 
               href="/explore" 
-              className="px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+              className="px-8 py-4 bg-orange-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
             >
               Explore Trails
             </a>

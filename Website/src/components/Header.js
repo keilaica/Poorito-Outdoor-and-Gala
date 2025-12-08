@@ -67,7 +67,7 @@ function Header() {
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}
-            className="w-10 h-10 bg-gradient-to-br from-primary to-primary-dark rounded-full flex items-center justify-center text-white text-lg cursor-pointer hover:shadow-lg transition-all transform hover:scale-105"
+            className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white text-lg cursor-pointer hover:shadow-lg transition-all transform hover:scale-105 hover:bg-primary-dark"
           >
             👤
           </button>

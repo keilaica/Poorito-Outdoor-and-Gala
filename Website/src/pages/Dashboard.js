@@ -96,7 +96,7 @@ function Dashboard() {
         <div className="flex flex-wrap gap-3">
           <button 
             onClick={() => navigate('/')}
-            className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:shadow-lg transition-all flex items-center gap-2 text-sm font-medium"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 hover:shadow-lg transition-all flex items-center gap-2 text-sm font-medium"
           >
             <span>🌐</span>
             View Public Site

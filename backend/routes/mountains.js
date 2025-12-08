@@ -4,6 +4,23 @@ const { withTimeout, withRetry } = require('../config/database');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
+const INT32_MAX = 2147483647;
+const INT32_MIN = -2147483648;
+
+// Validate 32-bit integer fields and fail fast with 400 instead of a DB 500
+const validateInt = (value, fieldName, res) => {
+  if (value === null || value === undefined || value === '') return null;
+  const parsed = parseInt(value, 10);
+  if (Number.isNaN(parsed)) {
+    res.status(400).json({ error: `${fieldName} must be a number` });
+    return 'error';
+  }
+  if (parsed > INT32_MAX || parsed < INT32_MIN) {
+    res.status(400).json({ error: `${fieldName} is out of range` });
+    return 'error';
+  }
+  return parsed;
+};
 
 // Get all mountains (public)
 router.get('/', async (req, res) => {
@@ -120,16 +137,26 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { name, elevation, location, difficulty, description, status, image_url, additional_images, trip_duration, meters_above_sea_level, duration, distance_km, base_price_per_head, joiner_capacity, exclusive_price, is_joiner_available, is_exclusive_available, what_to_bring, budgeting, itinerary, how_to_get_there } = req.body;
+
+    // Validate numeric fields to avoid DB integer overflows
+    const parsedElevation = validateInt(elevation, 'elevation', res);
+    if (parsedElevation === 'error') return;
+    const parsedTripDuration = validateInt(trip_duration, 'trip_duration', res) ?? 1;
+    if (parsedTripDuration === 'error') return;
+    const parsedJoinerCapacity = validateInt(joiner_capacity, 'joiner_capacity', res) ?? 14;
+    if (parsedJoinerCapacity === 'error') return;
+    const parsedMetersASL = validateInt(meters_above_sea_level, 'meters_above_sea_level', res);
+    if (parsedMetersASL === 'error') return;
     
     // Debug: Log received data
     console.log('Received mountain data:', {
       name,
-      elevation,
+      elevation: parsedElevation,
       location,
       difficulty,
       description,
-      trip_duration,
-      distance_km,
+      trip_duration: parsedTripDuration,
+      distance_km: distance_km,
       image_url: image_url ? `${image_url.substring(0, 50)}...` : 'No image',
       additional_images_count: additional_images ? additional_images.length : 0,
       what_to_bring_count: Array.isArray(what_to_bring) ? what_to_bring.length : 0,
@@ -145,15 +172,13 @@ router.post('/', async (req, res) => {
       .from('mountains')
       .insert([{
         name,
-        elevation,
+        elevation: parsedElevation,
         location,
         difficulty,
         description,
         status: status || 'backtrail',
-        trip_duration: trip_duration || 1, // Default to 1 day if not provided
-        meters_above_sea_level: (meters_above_sea_level === null || meters_above_sea_level === '' || meters_above_sea_level === undefined) 
-          ? null 
-          : (isNaN(parseInt(meters_above_sea_level)) ? null : parseInt(meters_above_sea_level)),
+        trip_duration: parsedTripDuration || 1, // Default to 1 day if not provided
+        meters_above_sea_level: parsedMetersASL,
         duration: (duration === null || duration === '' || duration === undefined) ? null : duration,
         distance_km: (distance_km === null || distance_km === '' || distance_km === undefined) 
           ? null 
@@ -161,7 +186,7 @@ router.post('/', async (req, res) => {
         image_url,
         additional_images: Array.isArray(additional_images) ? additional_images : [],
         base_price_per_head: base_price_per_head || 1599.00,
-        joiner_capacity: joiner_capacity || 14,
+        joiner_capacity: parsedJoinerCapacity || 14,
         exclusive_price: (() => {
           if (exclusive_price === undefined || exclusive_price === null || exclusive_price === '') {
             return null;

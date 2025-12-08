@@ -14,6 +14,8 @@ function Register() {
   const [loading, setLoading] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Password requirements validation
   const validatePassword = (password) => {
@@ -83,7 +85,7 @@ function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-orange-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo Section */}
         <div className="text-center mb-8">
@@ -97,7 +99,7 @@ function Register() {
               onError={(e) => {
                 e.target.style.display = 'none';
                 const fallback = document.createElement('div');
-                fallback.className = 'w-24 h-24 mx-auto bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center shadow-xl mb-4 ring-4 ring-orange-100';
+                fallback.className = 'w-24 h-24 mx-auto bg-orange-600 rounded-full flex items-center justify-center shadow-xl mb-4 ring-4 ring-orange-100';
                 fallback.innerHTML = '<span class="text-white font-bold text-lg">POORITO</span>';
                 e.target.parentElement?.appendChild(fallback);
               }}
@@ -167,28 +169,36 @@ function Register() {
               <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
                 Password
               </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                autoComplete="new-password"
-                autoCorrect="off"
-                autoCapitalize="none"
-                spellCheck="false"
-                inputMode="none"
-                aria-autocomplete="none"
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all ${
-                  formData.password && !isPasswordValid
-                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                    : formData.password && isPasswordValid
-                    ? 'border-green-300'
-                    : 'border-gray-300'
-                }`}
-                placeholder="Enter your password"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  autoComplete="new-password"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck="false"
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all pr-12 ${
+                    formData.password && !isPasswordValid
+                      ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                      : formData.password && isPasswordValid
+                      ? 'border-green-300'
+                      : 'border-gray-300'
+                  }`}
+                  placeholder="Enter your password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute inset-y-0 right-0 px-3 text-sm font-semibold text-orange-600 hover:text-orange-700 focus:outline-none"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
               {/* Password Requirements */}
               {formData.password && (
                 <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
@@ -223,28 +233,36 @@ function Register() {
               <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">
                 Confirm Password
               </label>
-              <input
-                type="password"
-                id="confirmPassword"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                required
-                autoComplete="new-password"
-                autoCorrect="off"
-                autoCapitalize="none"
-                spellCheck="false"
-                inputMode="none"
-                aria-autocomplete="none"
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all ${
-                  formData.confirmPassword && !passwordsMatch
-                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                    : formData.confirmPassword && passwordsMatch
-                    ? 'border-green-300 focus:border-green-500 focus:ring-green-500'
-                    : 'border-gray-300 focus:ring-orange-500 focus:border-orange-500'
-                }`}
-                placeholder="Confirm your password"
-              />
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  required
+                  autoComplete="new-password"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck="false"
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all pr-12 ${
+                    formData.confirmPassword && !passwordsMatch
+                      ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                      : formData.confirmPassword && passwordsMatch
+                      ? 'border-green-300 focus:border-green-500 focus:ring-green-500'
+                      : 'border-gray-300 focus:ring-orange-500 focus:border-orange-500'
+                  }`}
+                  placeholder="Confirm your password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((prev) => !prev)}
+                  className="absolute inset-y-0 right-0 px-3 text-sm font-semibold text-orange-600 hover:text-orange-700 focus:outline-none"
+                  aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showConfirmPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
               {/* Password Match Indicator */}
               {formData.confirmPassword && (
                 <div className="mt-2">
@@ -347,7 +365,7 @@ function Register() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setShowTermsModal(false)}>
           <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 flex items-center justify-between">
+            <div className="bg-orange-600 px-6 py-4 flex items-center justify-between">
               <h2 className="text-2xl font-bold text-white">Terms & Conditions</h2>
               <button
                 onClick={() => setShowTermsModal(false)}

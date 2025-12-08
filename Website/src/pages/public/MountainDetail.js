@@ -675,7 +675,7 @@ function MountainDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
         <button
@@ -725,7 +725,7 @@ function MountainDetail() {
                         images.map((img, index) => (
                           <SwiperSlide key={index}>
                             <div 
-                              className="aspect-video rounded-2xl overflow-hidden bg-gradient-to-br from-orange-500 to-orange-700 cursor-pointer"
+                              className="aspect-video rounded-2xl overflow-hidden bg-orange-600 cursor-pointer"
                               onClick={() => openImageViewer(index)}
                             >
                               <img 
@@ -740,7 +740,7 @@ function MountainDetail() {
                         ))
                       ) : (
                         <SwiperSlide>
-                          <div className="aspect-video rounded-2xl overflow-hidden bg-gradient-to-br from-orange-500 to-orange-700 flex items-center justify-center">
+                          <div className="aspect-video rounded-2xl overflow-hidden bg-orange-600 flex items-center justify-center">
                             <div className="text-center">
                               <div className="text-8xl mb-4">⛰️</div>
                               <p className="text-white text-xl font-semibold">{mountain.name}</p>
@@ -758,7 +758,7 @@ function MountainDetail() {
                 {/* Main Image */}
                 <div className="col-span-3">
                   <div 
-                    className="aspect-video rounded-2xl overflow-hidden shadow-xl bg-gradient-to-br from-orange-500 to-orange-700 cursor-pointer hover:opacity-90 transition-opacity"
+                    className="aspect-video rounded-2xl overflow-hidden shadow-xl bg-orange-600 cursor-pointer hover:opacity-90 transition-opacity"
                     onClick={() => {
                       const images = getAllImages();
                       if (images.length > 0) {
@@ -794,7 +794,7 @@ function MountainDetail() {
                       return (
                         <div 
                           key={index} 
-                          className="aspect-video rounded-lg overflow-hidden shadow-md bg-gradient-to-br from-gray-200 to-gray-300 cursor-pointer hover:opacity-90 transition-opacity"
+                          className="aspect-video rounded-lg overflow-hidden shadow-md bg-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
                           onClick={() => {
                             if (images.length > imageIndex) {
                               openImageViewer(imageIndex);
@@ -813,7 +813,7 @@ function MountainDetail() {
                     })
                   ) : (
                     [1, 2, 3].map((i) => (
-                      <div key={i} className="aspect-video rounded-lg overflow-hidden bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                      <div key={i} className="aspect-video rounded-lg overflow-hidden bg-gray-200 flex items-center justify-center">
                         <span className="text-2xl text-gray-500">⛰️</span>
                       </div>
                     ))
@@ -860,11 +860,9 @@ function MountainDetail() {
                     <div className="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center text-white text-lg mx-auto mb-2">🏔️</div>
                     <div className="text-xs text-gray-500">Elevation</div>
                     <div className="text-sm font-semibold text-gray-900">
-                      {mountain.meters_above_sea_level 
-                        ? `${mountain.meters_above_sea_level.toLocaleString()} MASL` 
-                        : mountain.elevation 
-                          ? `${mountain.elevation.toLocaleString()} MASL` 
-                          : 'N/A'}
+                      {mountain.elevation 
+                        ? `${mountain.elevation.toLocaleString()} MASL` 
+                        : 'N/A'}
                     </div>
                   </div>
                 </div>
@@ -926,7 +924,7 @@ function MountainDetail() {
                 <div className="space-y-3">
                   <button 
                     onClick={handleBookTrail}
-                    className="w-full px-4 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all touch-manipulation min-h-[44px]"
+                    className="w-full px-4 py-3 bg-orange-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all touch-manipulation min-h-[44px]"
                   >
                     {user ? 'Book This Trail' : 'Sign In to Book'}
                   </button>
@@ -1086,7 +1084,6 @@ function MountainDetail() {
                     <div>
                       <div className="font-semibold text-gray-900">
                         {item.item_time && `${item.item_time} - `}{item.item_name}
-                        {item.item_duration && ` (${item.item_duration})`}
                       </div>
                       {item.item_description && (
                         <div className="text-gray-600 text-sm mt-1">{item.item_description}</div>
@@ -1122,7 +1119,7 @@ function MountainDetail() {
 
             <div className="grid md:grid-cols-2 gap-8 items-stretch">
               {/* Checklist */}
-              <div className="bg-gradient-to-b from-gray-50 to-white rounded-xl p-5 border border-gray-100">
+              <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
                 <h3 className="text-sm font-semibold text-gray-800 mb-4 uppercase tracking-wide">
                   Essentials Checklist
                 </h3>
@@ -1148,7 +1145,7 @@ function MountainDetail() {
               </div>
 
               {/* Safety Card */}
-              <div className="bg-gradient-to-br from-orange-50 via-orange-100 to-orange-200 rounded-xl p-6 flex items-center justify-center border border-orange-100">
+              <div className="bg-orange-100 rounded-xl p-6 flex items-center justify-center border border-orange-100">
                 <div className="max-w-sm text-center">
                   <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/70 shadow-sm">
                     <span className="text-3xl">⚠️</span>
@@ -1171,7 +1168,7 @@ function MountainDetail() {
         </div>
 
         {/* CTA Section */}
-        <div className="mt-16 text-center bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl p-12 text-white">
+        <div className="mt-16 text-center bg-orange-600 rounded-2xl p-12 text-white">
           <h2 className="text-3xl font-bold mb-4">Ready to Explore {mountain.name}?</h2>
           <p className="text-xl mb-8 opacity-90">Plan your adventure and discover more amazing trails</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -1556,7 +1553,7 @@ function MountainDetail() {
               </div>
 
               {/* Booking Details */}
-              <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-xl p-4 border border-gray-200">
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
                 <h4 className="font-bold text-gray-900 mb-3 text-sm uppercase tracking-wide">Booking Details</h4>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div>
@@ -1595,7 +1592,7 @@ function MountainDetail() {
 
               {/* Pricing Summary */}
               {mountain && (mountain.base_price_per_head > 0) && (
-                <div className="bg-gradient-to-br from-orange-50 to-orange-100 border-2 border-orange-200 rounded-xl p-4 shadow-sm">
+                <div className="bg-orange-100 border-2 border-orange-200 rounded-xl p-4 shadow-sm">
                   <h4 className="font-bold text-gray-900 mb-3 text-sm uppercase tracking-wide">Pricing Summary</h4>
                   <div className="space-y-2.5 mb-3">
                     {bookingType === 'joiner' ? (
@@ -1802,7 +1799,7 @@ function MountainDetail() {
                   className={`flex-1 px-4 py-3 sm:py-2.5 rounded-lg font-semibold text-white transition-all shadow-lg touch-manipulation min-h-[44px] ${
                     bookingLoading
                       ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 hover:shadow-xl active:scale-[0.98]'
+                      : 'bg-orange-600 hover:bg-orange-700 hover:shadow-xl active:scale-[0.98]'
                   }`}
                 >
                   {bookingLoading ? (

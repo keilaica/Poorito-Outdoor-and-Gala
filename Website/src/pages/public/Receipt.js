@@ -86,7 +86,7 @@ function Receipt() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 flex items-center justify-center">
+      <div className="min-h-screen bg-orange-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading receipt...</p>
@@ -97,7 +97,7 @@ function Receipt() {
 
   if (error || !receipt) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 flex items-center justify-center">
+      <div className="min-h-screen bg-orange-50 flex items-center justify-center">
         <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
           <div className="text-6xl mb-4">❌</div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Receipt Not Found</h2>
@@ -114,7 +114,7 @@ function Receipt() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 py-8">
+    <div className="min-h-screen bg-orange-50 py-8">
       {/* Print Header - Hidden on screen, visible when printing */}
       <div className="hidden print:block mb-8">
         <div className="text-center">
@@ -222,7 +222,7 @@ function Receipt() {
                     className="w-24 h-24 rounded-lg object-cover"
                   />
                 ) : (
-                  <div className="w-24 h-24 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
+                  <div className="w-24 h-24 bg-orange-600 rounded-lg flex items-center justify-center">
                     <span className="text-white text-3xl">⛰️</span>
                   </div>
                 )}

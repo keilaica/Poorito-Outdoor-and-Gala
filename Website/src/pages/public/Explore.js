@@ -60,7 +60,7 @@ const MountainCard = ({ mountain, viewMode }) => {
       >
         <div className="flex flex-col md:flex-row">
           {/* Image */}
-          <div className="md:w-96 h-56 md:h-auto bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 overflow-hidden relative">
+          <div className="md:w-96 h-56 md:h-auto bg-orange-500 overflow-hidden relative">
             {mountain.image_url ? (
               <img 
                 src={mountain.image_url} 
@@ -74,7 +74,7 @@ const MountainCard = ({ mountain, viewMode }) => {
                 <span className="text-white text-7xl opacity-50">⛰️</span>
               </div>
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-black/10 group-hover:from-black/30 transition-all" />
+            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/25 transition-all" />
             <div className="absolute top-4 left-4">
               <span className={`px-3 py-1.5 rounded-full text-xs font-semibold border backdrop-blur-sm shadow-md ${getDifficultyColor(mountain.difficulty)}`}>
                 {mountain.difficulty}
@@ -162,7 +162,7 @@ const MountainCard = ({ mountain, viewMode }) => {
       aria-label={`View details for ${mountain.name}`}
       style={{ transition: 'transform 200ms, box-shadow 200ms' }}
     >
-      <div className="relative h-56 bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 overflow-hidden flex-shrink-0">
+      <div className="relative h-56 bg-orange-500 overflow-hidden flex-shrink-0">
         {mountain.image_url ? (
           <img 
             src={mountain.image_url} 
@@ -174,13 +174,13 @@ const MountainCard = ({ mountain, viewMode }) => {
             <span className="text-white text-7xl opacity-50">⛰️</span>
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-black/10 group-hover:from-black/30 transition-all" />
+        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/25 transition-all" />
         <div className="absolute top-4 right-4">
           <span className={`px-3 py-1.5 rounded-full text-xs font-semibold border backdrop-blur-sm shadow-md ${getDifficultyColor(mountain.difficulty)}`}>
             {mountain.difficulty}
           </span>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/50 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 h-24 bg-black/30" />
       </div>
       
       <div className="p-6 flex flex-col flex-grow">
@@ -290,7 +290,7 @@ function Explore() {
   }, [mountains, cityQuery, difficultyFilter, sortBy]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50">
+    <div className="min-h-screen" style={{ backgroundColor: '#F8F5F1' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Search header */}
         <div className="mb-10">
@@ -301,7 +301,7 @@ function Explore() {
             </div>
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex items-center gap-3 px-5 py-3 bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition-all">
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white text-xl">
+                <div className="w-10 h-10 rounded-lg bg-orange-600 flex items-center justify-center text-white text-xl">
                   ⛰️
                 </div>
                 <div className="text-sm">
@@ -480,7 +480,7 @@ function Explore() {
               color: 'from-purple-500 to-purple-600'
             }].map(card => (
               <div key={card.title} className="bg-white border border-gray-200 rounded-2xl p-7 hover:shadow-xl transition-all hover:border-orange-300 group hover:-translate-y-1 duration-300">
-                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${card.color} flex items-center justify-center text-3xl text-white mb-5 group-hover:scale-110 transition-transform shadow-lg`}>
+                <div className="w-16 h-16 rounded-2xl bg-orange-500 flex items-center justify-center text-3xl text-white mb-5 group-hover:scale-110 transition-transform shadow-lg">
                   {card.icon}
                 </div>
                 <h3 className="font-bold text-gray-900 text-xl mb-4">{card.title}</h3>
@@ -497,7 +497,7 @@ function Explore() {
           </div>
 
           {/* Difficulty Guide */}
-          <div className="bg-gradient-to-r from-orange-50 via-orange-50 to-orange-100 rounded-2xl p-8 lg:p-10 shadow-md border border-orange-200">
+          <div className="bg-orange-50 rounded-2xl p-8 lg:p-10 shadow-md border border-orange-200">
             <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8 text-center">Trail Difficulty Guide</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
               {[

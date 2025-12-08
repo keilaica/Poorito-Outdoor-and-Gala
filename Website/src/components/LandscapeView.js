@@ -2,34 +2,34 @@ import React from 'react';
 
 function LandscapeView({ className = '' }) {
   return (
-    <div className={`bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 rounded-xl shadow-lg overflow-hidden ${className}`}>
+    <div className={`bg-green-50 rounded-xl shadow-lg overflow-hidden ${className}`}>
       {/* Mountain Landscape Background */}
       <div className="relative h-full min-h-[600px] flex items-end">
         {/* Sky Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-sky-200 via-blue-100 to-green-100"></div>
+        <div className="absolute inset-0 bg-sky-200"></div>
         
         {/* Mountain Silhouettes */}
         <div className="absolute bottom-0 left-0 w-full h-3/4">
           {/* Far Mountains */}
           <div className="absolute bottom-0 left-0 w-full h-2/3">
-            <div className="absolute bottom-0 left-0 w-1/3 h-full bg-gradient-to-t from-gray-400 to-gray-300 rounded-t-full transform -skew-x-12"></div>
-            <div className="absolute bottom-0 left-1/4 w-1/4 h-4/5 bg-gradient-to-t from-gray-500 to-gray-400 rounded-t-full transform -skew-x-6"></div>
-            <div className="absolute bottom-0 right-1/3 w-1/3 h-3/4 bg-gradient-to-t from-gray-400 to-gray-300 rounded-t-full transform skew-x-12"></div>
-            <div className="absolute bottom-0 right-0 w-1/4 h-5/6 bg-gradient-to-t from-gray-500 to-gray-400 rounded-t-full transform skew-x-6"></div>
+            <div className="absolute bottom-0 left-0 w-1/3 h-full bg-gray-400 rounded-t-full transform -skew-x-12"></div>
+            <div className="absolute bottom-0 left-1/4 w-1/4 h-4/5 bg-gray-500 rounded-t-full transform -skew-x-6"></div>
+            <div className="absolute bottom-0 right-1/3 w-1/3 h-3/4 bg-gray-400 rounded-t-full transform skew-x-12"></div>
+            <div className="absolute bottom-0 right-0 w-1/4 h-5/6 bg-gray-500 rounded-t-full transform skew-x-6"></div>
           </div>
           
           {/* Mid Mountains */}
           <div className="absolute bottom-0 left-0 w-full h-4/5">
-            <div className="absolute bottom-0 left-1/6 w-1/4 h-full bg-gradient-to-t from-green-600 to-green-500 rounded-t-full transform -skew-x-8"></div>
-            <div className="absolute bottom-0 left-2/5 w-1/3 h-5/6 bg-gradient-to-t from-green-700 to-green-600 rounded-t-full transform -skew-x-4"></div>
-            <div className="absolute bottom-0 right-1/4 w-1/4 h-4/5 bg-gradient-to-t from-green-600 to-green-500 rounded-t-full transform skew-x-8"></div>
+            <div className="absolute bottom-0 left-1/6 w-1/4 h-full bg-green-600 rounded-t-full transform -skew-x-8"></div>
+            <div className="absolute bottom-0 left-2/5 w-1/3 h-5/6 bg-green-700 rounded-t-full transform -skew-x-4"></div>
+            <div className="absolute bottom-0 right-1/4 w-1/4 h-4/5 bg-green-600 rounded-t-full transform skew-x-8"></div>
           </div>
           
           {/* Near Mountains */}
           <div className="absolute bottom-0 left-0 w-full h-full">
-            <div className="absolute bottom-0 left-0 w-1/3 h-full bg-gradient-to-t from-emerald-700 to-emerald-600 rounded-t-full transform -skew-x-6"></div>
-            <div className="absolute bottom-0 left-1/3 w-1/3 h-5/6 bg-gradient-to-t from-emerald-800 to-emerald-700 rounded-t-full transform -skew-x-2"></div>
-            <div className="absolute bottom-0 right-0 w-1/3 h-4/5 bg-gradient-to-t from-emerald-700 to-emerald-600 rounded-t-full transform skew-x-6"></div>
+            <div className="absolute bottom-0 left-0 w-1/3 h-full bg-emerald-700 rounded-t-full transform -skew-x-6"></div>
+            <div className="absolute bottom-0 left-1/3 w-1/3 h-5/6 bg-emerald-800 rounded-t-full transform -skew-x-2"></div>
+            <div className="absolute bottom-0 right-0 w-1/3 h-4/5 bg-emerald-700 rounded-t-full transform skew-x-6"></div>
           </div>
         </div>
         
@@ -58,7 +58,7 @@ function LandscapeView({ className = '' }) {
         
         {/* Sun */}
         <div className="absolute top-1/6 right-1/6 w-12 h-12 bg-yellow-300 rounded-full shadow-lg"></div>
-        <div className="absolute top-1/6 right-1/6 w-12 h-12 bg-gradient-to-br from-yellow-200 to-orange-300 rounded-full"></div>
+        <div className="absolute top-1/6 right-1/6 w-12 h-12 bg-orange-300 rounded-full"></div>
         
         {/* Overlay Text */}
         <div className="absolute inset-0 flex items-center justify-center">

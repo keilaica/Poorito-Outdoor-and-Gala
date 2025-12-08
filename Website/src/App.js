@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import PublicLayout from './components/PublicLayout';
 import AdminLayout from './components/AdminLayout';
 import ProtectedRoute from './components/ProtectedRoute';
+import { NavigationGuardProvider } from './contexts/NavigationGuard';
 import Home from './pages/public/Home';
 import Explore from './pages/public/Explore';
 import MountainDetail from './pages/public/MountainDetail';
@@ -54,7 +55,9 @@ function App() {
         {/* Admin area - Protected with separate layout */}
         <Route path="/admin" element={
           <ProtectedRoute>
-            <AdminLayout />
+            <NavigationGuardProvider>
+              <AdminLayout />
+            </NavigationGuardProvider>
           </ProtectedRoute>
         }>
           <Route index element={<Dashboard />} />

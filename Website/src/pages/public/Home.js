@@ -121,6 +121,17 @@ function Home() {
     setShowSuggestions(true);
   };
 
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const query = cityQuery.trim();
+      setShowSuggestions(false);
+      if (query) {
+        navigate('/explore', { state: { searchQuery: query } });
+      }
+    }
+  };
+
   const handleSuggestionClick = (suggestion) => {
     setCityQuery(suggestion);
     setShowSuggestions(false);
@@ -140,7 +151,7 @@ function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col items-center text-center">
             <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 tracking-tight mb-4">
-              Find your next <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600">adventure</span>
+              Find your next <span className="text-orange-600">adventure</span>
             </h1>
             <p className="text-lg text-gray-600 mb-8 max-w-2xl">
               Discover amazing trails across LUZON and beyond. Start your journey today.
@@ -155,6 +166,7 @@ function Home() {
                 <input 
                   value={cityQuery} 
                   onChange={handleSearchChange}
+                  onKeyDown={handleSearchKeyDown}
                   onFocus={() => setShowSuggestions(true)}
                   onBlur={() => setTimeout(() => setShowSuggestions(false), 200)} // Delay to allow clicks on suggestions
                   className="w-full border-2 border-gray-200 rounded-xl pl-12 pr-12 py-3 sm:py-4 text-base focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-md hover:border-gray-300 touch-manipulation" 
@@ -192,7 +204,7 @@ function Home() {
               )}
             </div>
           </div>
-          <div className="mt-8 h-64 md:h-96 rounded-3xl bg-gradient-to-br from-orange-400 to-orange-600 shadow-2xl overflow-hidden relative">
+          <div className="mt-8 h-64 md:h-96 rounded-3xl bg-orange-500 shadow-2xl overflow-hidden relative">
             <div 
               className="absolute inset-0 bg-cover bg-center bg-no-repeat"
               style={{
@@ -264,7 +276,7 @@ function Home() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {filteredLuzon.slice(0, cityQuery ? filteredLuzon.length : 4).map((mountain) => (
                       <div key={mountain.id} className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100">
-                        <div className="relative h-44 bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 overflow-hidden">
+                        <div className="relative h-44 bg-orange-500 overflow-hidden">
                           {mountain.image_url ? (
                             <img 
                               src={mountain.image_url} 
@@ -289,7 +301,7 @@ function Home() {
                               {mountain.difficulty}
                             </span>
                           </div>
-                          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/40 to-transparent" />
+                          <div className="absolute bottom-0 left-0 right-0 h-24 bg-black/30" />
                         </div>
                         <div className="p-5">
                           <h3 className="font-bold text-gray-900 text-lg mb-3 group-hover:text-orange-600 transition-colors">{mountain.name}</h3>
@@ -314,7 +326,7 @@ function Home() {
                           </div>
                           <button 
                             onClick={() => navigate(`/mountains/${mountain.id}`)}
-                            className="w-full px-4 py-3 sm:py-2.5 rounded-lg text-white text-sm font-semibold bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 touch-manipulation min-h-[44px]"
+                            className="w-full px-4 py-3 sm:py-2.5 rounded-lg text-white text-sm font-semibold bg-orange-600 hover:bg-orange-700 shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 touch-manipulation min-h-[44px]"
                           >
                             Explore
                           </button>
@@ -334,7 +346,7 @@ function Home() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {filteredBeyond.slice(0, cityQuery ? filteredBeyond.length : 4).map((mountain) => (
                       <div key={mountain.id} className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100">
-                        <div className="relative h-44 bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 overflow-hidden">
+                        <div className="relative h-44 bg-orange-500 overflow-hidden">
                           {mountain.image_url ? (
                             <img 
                               src={mountain.image_url} 
@@ -359,7 +371,7 @@ function Home() {
                               {mountain.difficulty}
                             </span>
                           </div>
-                          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/40 to-transparent" />
+                          <div className="absolute bottom-0 left-0 right-0 h-24 bg-black/30" />
                         </div>
                         <div className="p-5">
                           <h3 className="font-bold text-gray-900 text-lg mb-3 group-hover:text-orange-600 transition-colors">{mountain.name}</h3>
@@ -384,7 +396,7 @@ function Home() {
                           </div>
                           <button 
                             onClick={() => navigate(`/mountains/${mountain.id}`)}
-                            className="w-full px-4 py-3 sm:py-2.5 rounded-lg text-white text-sm font-semibold bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 touch-manipulation min-h-[44px]"
+                            className="w-full px-4 py-3 sm:py-2.5 rounded-lg text-white text-sm font-semibold bg-orange-600 hover:bg-orange-700 shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 touch-manipulation min-h-[44px]"
                           >
                             Explore
                           </button>
@@ -411,7 +423,7 @@ function Home() {
       {/* Statistics */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-3xl p-8 sm:p-12 text-white">
+          <div className="bg-orange-600 rounded-3xl p-8 sm:p-12 text-white">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 text-center">
               <div className="flex flex-col items-center">
                 <div className="text-4xl sm:text-5xl mb-3">⛰️</div>
@@ -471,8 +483,8 @@ function Home() {
                 }`}
               >
                 {/* Illustration panel */}
-                <div className="h-44 sm:h-52 md:h-56 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 relative flex items-center justify-center shadow-inner">
-                  <div className="absolute inset-0 opacity-35 bg-[radial-gradient(circle_at_top,_#ffffff33,_transparent_55%)]" />
+                <div className="h-44 sm:h-52 md:h-56 rounded-xl bg-emerald-500 relative flex items-center justify-center shadow-inner">
+                  <div className="absolute inset-0 opacity-35 bg-white" />
                   <div className="relative flex flex-col items-center justify-center">
                     <div className="text-6xl sm:text-7xl">{b.icon}</div>
                     <span className="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-white/15 text-white border border-white/20 backdrop-blur">
@@ -496,7 +508,7 @@ function Home() {
                   <div className="flex flex-wrap items-center gap-3">
                     <button
                       onClick={() => navigate('/guides')}
-                      className="px-6 py-3 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transition-all touch-manipulation min-h-[44px]"
+                      className="px-6 py-3 rounded-lg text-sm font-semibold text-white bg-orange-600 hover:bg-orange-700 shadow-md hover:shadow-lg transition-all touch-manipulation min-h-[44px]"
                     >
                       Read more
                     </button>

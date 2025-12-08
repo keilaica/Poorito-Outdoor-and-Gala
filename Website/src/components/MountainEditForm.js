@@ -9,7 +9,6 @@ function MountainEditForm({ mountain, onSave, onCancel }) {
     location: '',
     difficulty: 'Easy',
     status: 'backtrail',
-    meters_above_sea_level: '',
     duration: '',
     distance_km: ''
   });
@@ -25,7 +24,6 @@ function MountainEditForm({ mountain, onSave, onCancel }) {
         location: mountain.location || '',
         difficulty: mountain.difficulty || 'Easy',
         status: mountain.status || 'backtrail',
-        meters_above_sea_level: mountain.meters_above_sea_level || '',
         duration: mountain.duration || '',
         distance_km: mountain.distance_km != null && mountain.distance_km !== '' ? mountain.distance_km : ''
       });
@@ -59,7 +57,6 @@ function MountainEditForm({ mountain, onSave, onCancel }) {
         location: formData.location,
         difficulty: formData.difficulty,
         status: formData.status || 'backtrail',
-        meters_above_sea_level: formData.meters_above_sea_level ? parseInt(formData.meters_above_sea_level) : null,
         duration: formData.duration || null,
         distance_km: (formData.distance_km === '' || formData.distance_km === null || formData.distance_km === undefined)
           ? null
@@ -122,17 +119,6 @@ function MountainEditForm({ mountain, onSave, onCancel }) {
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Meters above sea level</label>
-            <input
-              type="number"
-              name="meters_above_sea_level"
-              value={formData.meters_above_sea_level}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
           </div>
 

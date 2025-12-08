@@ -27,7 +27,7 @@ function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-orange-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo Section */}
         <div className="text-center mb-8">
@@ -39,7 +39,7 @@ function ForgotPassword() {
               onError={(e) => {
                 e.target.style.display = 'none';
                 const fallback = document.createElement('div');
-                fallback.className = 'w-24 h-24 mx-auto bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center shadow-xl mb-4 ring-4 ring-orange-100';
+                fallback.className = 'w-24 h-24 mx-auto bg-orange-600 rounded-full flex items-center justify-center shadow-xl mb-4 ring-4 ring-orange-100';
                 fallback.innerHTML = '<span class="text-white font-bold text-lg">POORITO</span>';
                 e.target.parentElement?.appendChild(fallback);
               }}
