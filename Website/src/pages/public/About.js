@@ -1,6 +1,7 @@
 import React from 'react';
 
 function About() {
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Hero Section */}
@@ -21,11 +22,11 @@ function About() {
         <div className="mb-20">
           <div className="flex flex-col md:flex-row items-center gap-12">
             <div className="md:w-1/2">
-              <div className="rounded-2xl overflow-hidden shadow-lg h-80">
+              <div className="rounded-2xl overflow-hidden shadow-lg">
                 <img
                   src="/aboutimg.jpg"
                   alt="Poorito hiking group"
-                  className="w-full h-full object-cover"
+                  className="w-full h-auto object-contain"
                   loading="lazy"
                   decoding="async"
                 />
@@ -132,31 +133,6 @@ function About() {
                     to expect on each trail.
                   </p>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Statistics */}
-        <div className="mb-20">
-          <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-3xl p-12 text-white">
-            <h2 className="text-3xl font-bold text-center mb-12">Poorito by the Numbers</h2>
-            <div className="grid md:grid-cols-4 gap-8 text-center">
-              <div>
-                <div className="text-5xl font-extrabold mb-2">50+</div>
-                <div className="text-orange-100">Mountains Covered</div>
-              </div>
-              <div>
-                <div className="text-5xl font-extrabold mb-2">100+</div>
-                <div className="text-orange-100">Hiking Guides</div>
-              </div>
-              <div>
-                <div className="text-5xl font-extrabold mb-2">1000+</div>
-                <div className="text-orange-100">Happy Hikers</div>
-              </div>
-              <div>
-                <div className="text-5xl font-extrabold mb-2">24/7</div>
-                <div className="text-orange-100">Available Access</div>
               </div>
             </div>
           </div>

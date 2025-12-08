@@ -1,5 +1,6 @@
 const express = require('express');
 const supabase = require('../config/database');
+const { withTimeout, withRetry } = require('../config/database');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
@@ -348,6 +349,112 @@ router.get('/users', async (req, res) => {
       });
     }
     res.status(500).json({ error: 'Failed to fetch user analytics' });
+  }
+});
+
+// Get public statistics (for About page - no authentication required)
+router.get('/public/stats', async (req, res) => {
+  try {
+    // Get total counts for mountains, published articles (guides), and bookings
+    // Use head: true to only get count, not data - much faster
+    // Wrap each query with timeout and retry to prevent hanging
+    const [mountainResult, articleResult, bookingResult] = await Promise.all([
+      withRetry(() => supabase.from('mountains').select('*', { count: 'exact', head: true }), 1, 500),
+      withRetry(() => supabase.from('articles').select('*', { count: 'exact', head: true }).eq('status', 'published'), 1, 500),
+      withRetry(() => supabase.from('bookings').select('*', { count: 'exact', head: true }), 1, 500)
+    ]);
+
+    // Check for timeout errors specifically
+    const hasTimeoutError = [mountainResult, articleResult, bookingResult].some(result => 
+      result.error && (result.error.message && result.error.message.includes('timeout') || result.error.code === '57014')
+    );
+
+    if (hasTimeoutError) {
+      console.error('Get public stats timeout error:', {
+        mountains: mountainResult.error,
+        articles: articleResult.error,
+        bookings: bookingResult.error
+      });
+      
+      // Return cached/mock data instead of failing completely
+      if (process.env.NODE_ENV !== 'production') {
+        return res.json({
+          mountains: 50,
+          guides: 100,
+          bookings: 1000
+        });
+      }
+      
+      // In production, return partial data if available, or default values
+      return res.json({
+        mountains: mountainResult.count || 0,
+        guides: articleResult.count || 0,
+        bookings: bookingResult.count || 0
+      });
+    }
+
+    if (mountainResult.error || articleResult.error || bookingResult.error) {
+      console.error('Get public stats error:', {
+        mountains: mountainResult.error,
+        articles: articleResult.error,
+        bookings: bookingResult.error
+      });
+      
+      // Return mock data in development
+      if (process.env.NODE_ENV !== 'production') {
+        return res.json({
+          mountains: 50,
+          guides: 100,
+          bookings: 1000
+        });
+      }
+      
+      return res.status(500).json({ error: 'Failed to fetch statistics' });
+    }
+
+    // Get actual counts
+    const mountainsCount = mountainResult.count || 0;
+    const guidesCount = articleResult.count || 0;
+    const bookingsCount = bookingResult.count || 0;
+
+    // In development mode, use mock data if all counts are 0 (likely empty database)
+    if (process.env.NODE_ENV !== 'production' && mountainsCount === 0 && guidesCount === 0 && bookingsCount === 0) {
+      return res.json({
+        mountains: 50,
+        guides: 100,
+        bookings: 1000
+      });
+    }
+
+    res.json({
+      mountains: mountainsCount,
+      guides: guidesCount,
+      bookings: bookingsCount
+    });
+  } catch (error) {
+    console.error('Get public stats error:', error);
+    
+    // Handle timeout errors specifically
+    if (error.message && error.message.includes('timeout')) {
+      console.error('Query timeout in public stats:', error);
+      // Return default values instead of failing
+      return res.json({
+        mountains: 0,
+        guides: 0,
+        bookings: 0
+      });
+    }
+    
+    // Return mock data in development
+    if (process.env.NODE_ENV !== 'production') {
+      return res.json({
+        mountains: 50,
+        guides: 100,
+        bookings: 1000
+      });
+    }
+    
+    res.status(500).json({ error: 'Failed to fetch statistics' });
   }
 });
 

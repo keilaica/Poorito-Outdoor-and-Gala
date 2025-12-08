@@ -20,6 +20,87 @@ if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// Query timeout wrapper - prevents statement timeout errors
+const QUERY_TIMEOUT_MS = 25000; // 25 seconds (slightly less than typical 30s DB timeout)
+
+/**
+ * Wraps a Supabase query with a timeout to prevent hanging queries
+ * @param {Promise} queryPromise - The Supabase query promise
+ * @param {number} timeoutMs - Timeout in milliseconds (default: QUERY_TIMEOUT_MS)
+ * @returns {Promise} Promise that rejects with timeout error if query takes too long
+ */
+const withTimeout = (queryPromise, timeoutMs = QUERY_TIMEOUT_MS) => {
+  return Promise.race([
+    queryPromise,
+    new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error(`Query timeout after ${timeoutMs}ms`));
+      }, timeoutMs);
+    })
+  ]);
+};
+
+/**
+ * Retries a query with exponential backoff for transient failures
+ * @param {Function} queryFn - Function that returns a Supabase query promise
+ * @param {number} maxRetries - Maximum number of retries (default: 2)
+ * @param {number} initialDelayMs - Initial delay before retry in ms (default: 1000)
+ * @returns {Promise} Query result
+ */
+const withRetry = async (queryFn, maxRetries = 2, initialDelayMs = 1000) => {
+  let lastError;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const result = await withTimeout(queryFn());
+      
+      // Check if result has an error that might be retryable
+      if (result.error) {
+        const errorCode = result.error.code;
+        const errorMessage = result.error.message || '';
+        
+        // Retry on timeout or connection errors
+        const isRetryable = errorCode === '57014' || 
+                           errorMessage.includes('timeout') ||
+                           errorMessage.includes('connection') ||
+                           errorMessage.includes('network');
+        
+        if (isRetryable && attempt < maxRetries) {
+          const delay = initialDelayMs * Math.pow(2, attempt);
+          console.warn(`Query failed (attempt ${attempt + 1}/${maxRetries + 1}), retrying in ${delay}ms...`, result.error);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          lastError = result.error;
+          continue;
+        }
+        
+        // If not retryable or out of retries, return the error result
+        return result;
+      }
+      
+      // Success - return the result
+      return result;
+    } catch (error) {
+      lastError = error;
+      
+      // Retry on timeout errors
+      if (error.message && error.message.includes('timeout') && attempt < maxRetries) {
+        const delay = initialDelayMs * Math.pow(2, attempt);
+        console.warn(`Query timeout (attempt ${attempt + 1}/${maxRetries + 1}), retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      
+      // If not retryable or out of retries, return error object
+      if (attempt >= maxRetries) {
+        return { error: error, data: null };
+      }
+    }
+  }
+  
+  // If we exhausted retries, return the last error
+  return { error: lastError, data: null };
+};
+
 // Test connection
 const testConnection = async () => {
   try {
@@ -71,3 +152,6 @@ const testConnection = async () => {
 testConnection();
 
 module.exports = supabase;
+module.exports.withTimeout = withTimeout;
+module.exports.withRetry = withRetry;
+module.exports.QUERY_TIMEOUT_MS = QUERY_TIMEOUT_MS;

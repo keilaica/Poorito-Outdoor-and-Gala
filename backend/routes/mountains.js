@@ -1,5 +1,6 @@
 const express = require('express');
 const supabase = require('../config/database');
+const { withTimeout, withRetry } = require('../config/database');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
@@ -7,19 +8,25 @@ const router = express.Router();
 // Get all mountains (public)
 router.get('/', async (req, res) => {
   try {
-    // Try to select with distance_km first
-    let { data: mountains, error } = await supabase
-      .from('mountains')
-      .select('id, name, elevation, location, difficulty, description, image_url, additional_images, trip_duration, meters_above_sea_level, duration, distance_km, base_price_per_head, joiner_capacity, exclusive_price, is_joiner_available, is_exclusive_available, created_at, updated_at')
-      .order('name', { ascending: true });
+    // Try to select with distance_km first, wrapped with timeout and retry
+    let result = await withRetry(() => {
+      return supabase
+        .from('mountains')
+        .select('id, name, elevation, location, difficulty, description, image_url, additional_images, trip_duration, meters_above_sea_level, duration, distance_km, base_price_per_head, joiner_capacity, exclusive_price, is_joiner_available, is_exclusive_available, created_at, updated_at')
+        .order('name', { ascending: true });
+    }, 2, 1000); // 2 retries with 1s initial delay
+    
+    let { data: mountains, error } = result;
 
     // If error is due to missing distance_km column, retry without it
     if (error && error.message && error.message.includes('distance_km') && error.message.includes('does not exist')) {
       console.warn('distance_km column does not exist, retrying without it. Please run migration: backend/database/migrations/add_distance_km_to_mountains.sql');
-      const retryResult = await supabase
-        .from('mountains')
-        .select('id, name, elevation, location, difficulty, description, image_url, additional_images, trip_duration, meters_above_sea_level, duration, base_price_per_head, joiner_capacity, exclusive_price, is_joiner_available, is_exclusive_available, created_at, updated_at')
-        .order('name', { ascending: true });
+      const retryResult = await withRetry(() => {
+        return supabase
+          .from('mountains')
+          .select('id, name, elevation, location, difficulty, description, image_url, additional_images, trip_duration, meters_above_sea_level, duration, base_price_per_head, joiner_capacity, exclusive_price, is_joiner_available, is_exclusive_available, created_at, updated_at')
+          .order('name', { ascending: true });
+      }, 2, 1000);
       
       mountains = retryResult.data;
       error = retryResult.error;
@@ -28,6 +35,17 @@ router.get('/', async (req, res) => {
       if (mountains) {
         mountains = mountains.map(m => ({ ...m, distance_km: null }));
       }
+    }
+
+    // Handle timeout errors specifically
+    if (error && (error.message && error.message.includes('timeout') || error.code === '57014')) {
+      console.error('Get mountains timeout error:', error);
+      // Return cached/fallback data or empty array instead of failing
+      return res.status(503).json({ 
+        error: 'Query timeout - database is slow',
+        mountains: [],
+        message: 'The database query timed out. Please try again later.'
+      });
     }
 
     if (error) {
@@ -48,6 +66,16 @@ router.get('/', async (req, res) => {
     res.json({ mountains: mountains || [] });
   } catch (error) {
     console.error('Get mountains error:', error);
+    
+    // Handle timeout errors
+    if (error.message && error.message.includes('timeout')) {
+      return res.status(503).json({ 
+        error: 'Query timeout',
+        mountains: [],
+        message: 'The database query timed out. Please try again later.'
+      });
+    }
+    
     if (process.env.NODE_ENV !== 'production') {
       return res.json({ mountains: [
         { id: 1, name: 'Mount Apo', elevation: 2954, location: 'Davao del Sur', difficulty: 'Hard', description: 'The highest peak in the Philippines', image_url: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
@@ -91,7 +119,7 @@ router.get('/:id', async (req, res) => {
 // Create mountain (admin only) - temporarily without auth for testing
 router.post('/', async (req, res) => {
   try {
-    const { name, elevation, location, difficulty, description, status, image_url, additional_images, trip_duration, meters_above_sea_level, duration, distance_km, base_price_per_head, joiner_capacity, exclusive_price, is_joiner_available, is_exclusive_available } = req.body;
+    const { name, elevation, location, difficulty, description, status, image_url, additional_images, trip_duration, meters_above_sea_level, duration, distance_km, base_price_per_head, joiner_capacity, exclusive_price, is_joiner_available, is_exclusive_available, what_to_bring, budgeting, itinerary, how_to_get_there } = req.body;
     
     // Debug: Log received data
     console.log('Received mountain data:', {
@@ -103,7 +131,10 @@ router.post('/', async (req, res) => {
       trip_duration,
       distance_km,
       image_url: image_url ? `${image_url.substring(0, 50)}...` : 'No image',
-      additional_images_count: additional_images ? additional_images.length : 0
+      additional_images_count: additional_images ? additional_images.length : 0,
+      what_to_bring_count: Array.isArray(what_to_bring) ? what_to_bring.length : 0,
+      budgeting_count: Array.isArray(budgeting) ? budgeting.length : 0,
+      itinerary_count: Array.isArray(itinerary) ? itinerary.length : 0
     });
 
     if (!name || !elevation || !location || !difficulty) {
@@ -143,6 +174,10 @@ router.post('/', async (req, res) => {
         })(),
         is_joiner_available: is_joiner_available !== undefined ? is_joiner_available : true,
         is_exclusive_available: is_exclusive_available !== undefined ? is_exclusive_available : true,
+        what_to_bring: Array.isArray(what_to_bring) ? what_to_bring : [],
+        budgeting: Array.isArray(budgeting) ? budgeting : [],
+        itinerary: Array.isArray(itinerary) ? itinerary : [],
+        how_to_get_there: Array.isArray(how_to_get_there) ? how_to_get_there : [],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }])
@@ -344,10 +379,37 @@ router.put('/:id', async (req, res) => {
     });
 
     // Add JSONB columns if provided
-    if (what_to_bring !== undefined) updateData.what_to_bring = what_to_bring;
-    if (budgeting !== undefined) updateData.budgeting = budgeting;
-    if (itinerary !== undefined) updateData.itinerary = itinerary;
-    if (how_to_get_there !== undefined) updateData.how_to_get_there = how_to_get_there;
+    if (what_to_bring !== undefined) {
+      updateData.what_to_bring = Array.isArray(what_to_bring) ? what_to_bring : [];
+      console.log('Saving what_to_bring:', {
+        isArray: Array.isArray(what_to_bring),
+        count: Array.isArray(what_to_bring) ? what_to_bring.length : 0,
+        items: Array.isArray(what_to_bring) ? what_to_bring.map(item => item.item_name || item) : []
+      });
+    }
+    if (budgeting !== undefined) {
+      updateData.budgeting = Array.isArray(budgeting) ? budgeting : [];
+      console.log('Saving budgeting:', {
+        isArray: Array.isArray(budgeting),
+        count: Array.isArray(budgeting) ? budgeting.length : 0,
+        items: Array.isArray(budgeting) ? budgeting.map(item => ({ name: item.item_name, amount: item.item_amount })) : []
+      });
+    }
+    if (itinerary !== undefined) {
+      updateData.itinerary = Array.isArray(itinerary) ? itinerary : [];
+      console.log('Saving itinerary:', {
+        isArray: Array.isArray(itinerary),
+        count: Array.isArray(itinerary) ? itinerary.length : 0,
+        items: Array.isArray(itinerary) ? itinerary.map(item => ({ title: item.item_name, description: item.item_description, location: item.item_location, time: item.item_time })) : []
+      });
+    }
+    if (how_to_get_there !== undefined) {
+      updateData.how_to_get_there = Array.isArray(how_to_get_there) ? how_to_get_there : [];
+      console.log('Saving how_to_get_there:', {
+        isArray: Array.isArray(how_to_get_there),
+        count: Array.isArray(how_to_get_there) ? how_to_get_there.length : 0
+      });
+    }
 
     const { data: updatedMountain, error } = await supabase
       .from('mountains')

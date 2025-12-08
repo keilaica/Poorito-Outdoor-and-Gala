@@ -209,6 +209,10 @@ class ApiService {
     return this.request('/analytics/users');
   }
 
+  async getPublicStats() {
+    return this.request('/analytics/public/stats');
+  }
+
   // Booking endpoints
   async getMyBookings() {
     return this.request('/bookings/my-bookings');

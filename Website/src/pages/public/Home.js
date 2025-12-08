@@ -8,10 +8,17 @@ function Home() {
   const [mountains, setMountains] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [stats, setStats] = useState({
+    mountains: 0,
+    guides: 0,
+    bookings: 0
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
 
   // Fetch mountains from API
   useEffect(() => {
     fetchMountains();
+    fetchStats();
   }, []);
 
   const fetchMountains = async () => {
@@ -25,6 +32,23 @@ function Home() {
       setMountains([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      setStatsLoading(true);
+      const data = await apiService.getPublicStats();
+      setStats({
+        mountains: data.mountains || 0,
+        guides: data.guides || 0,
+        bookings: data.bookings || 0
+      });
+    } catch (error) {
+      console.error('Error fetching statistics:', error);
+      // Keep default values (0) on error
+    } finally {
+      setStatsLoading(false);
     }
   };
 
@@ -112,7 +136,7 @@ function Home() {
   return (
     <div className="min-h-screen">
       {/* Hero section */}
-      <section className="bg-gradient-to-br from-orange-50 via-white to-gray-50 pt-8 pb-20 px-4 sm:px-6 lg:px-8">
+      <section className="pt-8 pb-20 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: '#F8F5F1' }}>
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col items-center text-center">
             <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 tracking-tight mb-4">
@@ -172,7 +196,7 @@ function Home() {
             <div 
               className="absolute inset-0 bg-cover bg-center bg-no-repeat"
               style={{
-                backgroundImage: `url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80')`
+                backgroundImage: `url('/imgbg.jpg')`
               }}
             />
             <div className="absolute inset-0 bg-black/20" />
@@ -380,6 +404,42 @@ function Home() {
               <span>See more trails</span>
               <span className="group-hover:translate-x-1 transition-transform">→</span>
             </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Statistics */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-3xl p-8 sm:p-12 text-white">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 text-center">
+              <div className="flex flex-col items-center">
+                <div className="text-4xl sm:text-5xl mb-3">⛰️</div>
+                <div className="text-3xl sm:text-5xl font-extrabold mb-2">
+                  {statsLoading ? '...' : `${stats.mountains}+`}
+                </div>
+                <div className="text-sm sm:text-base text-orange-100">Mountains Covered</div>
+              </div>
+              <div className="flex flex-col items-center">
+                <div className="text-4xl sm:text-5xl mb-3">🧭</div>
+                <div className="text-3xl sm:text-5xl font-extrabold mb-2">
+                  {statsLoading ? '...' : `${stats.guides}+`}
+                </div>
+                <div className="text-sm sm:text-base text-orange-100">Hiking Guides</div>
+              </div>
+              <div className="flex flex-col items-center">
+                <div className="text-4xl sm:text-5xl mb-3">🗓️</div>
+                <div className="text-3xl sm:text-5xl font-extrabold mb-2">
+                  {statsLoading ? '...' : `${stats.bookings}+`}
+                </div>
+                <div className="text-sm sm:text-base text-orange-100">Bookings Made</div>
+              </div>
+              <div className="flex flex-col items-center">
+                <div className="text-4xl sm:text-5xl mb-3">⏰</div>
+                <div className="text-3xl sm:text-5xl font-extrabold mb-2">24/7</div>
+                <div className="text-sm sm:text-base text-orange-100">Available Access</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

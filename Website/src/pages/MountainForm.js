@@ -103,7 +103,7 @@ function MountainForm() {
           const itineraryItems = mountain.itinerary.map(item => ({
             title: item.item_name || '',
             description: item.item_description || '',
-            location: '', // Not stored in current structure
+            location: item.item_location || '', // Load location field
             time: item.item_time || ''
           }));
           console.log('Setting hike itinerary:', itineraryItems);
@@ -122,13 +122,13 @@ function MountainForm() {
           
           mountain.budgeting.forEach(item => {
             if (item.item_name === 'Environmental Fee') {
-              feeData.environmentalFee = item.item_amount ? item.item_amount.toString() : '';
+              feeData.environmentalFee = (item.item_amount !== null && item.item_amount !== undefined) ? item.item_amount.toString() : '';
             } else if (item.item_name === 'Overtime Fee' || item.item_name === 'Registration Fee') {
               // Support both old "Registration Fee" and new "Overtime Fee" names
-              feeData.registrationFee = item.item_amount ? item.item_amount.toString() : '';
+              feeData.registrationFee = (item.item_amount !== null && item.item_amount !== undefined) ? item.item_amount.toString() : '';
             } else if (item.item_name === 'Food Stub' || item.item_name === 'Over Time Fee' || item.item_name === 'Guide/Camping Fee') {
               // Support old names: "Over Time Fee" and "Guide/Camping Fee", and new "Food Stub"
-              feeData.guideCampingFee = item.item_amount ? item.item_amount.toString() : '';
+              feeData.guideCampingFee = (item.item_amount !== null && item.item_amount !== undefined) ? item.item_amount.toString() : '';
             }
           });
           
@@ -236,32 +236,71 @@ function MountainForm() {
       }
 
       // Prepare all mountain data including details in one call
+      const whatToBringData = thingsToBring
+        .filter(item => item && item.trim() !== '')
+        .map((item, index) => ({
+          id: Date.now() + index, // Generate unique ID
+          item_name: item.trim(),
+          item_description: '',
+          item_icon: '📦', // Default icon
+          sort_order: index + 1
+        }));
+
+      const itineraryData = hikeItinerary
+        .filter(item => item && (item.title || item.description || item.location || item.time))
+        .map((item, index) => ({
+          id: Date.now() + 200 + index,
+          item_name: item.title || '',
+          item_description: item.description || '',
+          item_location: item.location || '',
+          item_time: item.time || '',
+          item_duration: '2-3 hours', // Default duration
+          sort_order: index + 1
+        }));
+
       const mountainDetails = {
-        what_to_bring: thingsToBring
-          .filter(item => item.trim() !== '')
-          .map((item, index) => ({
-            id: Date.now() + index, // Generate unique ID
-            item_name: item,
-            item_description: '',
-            item_icon: '📦', // Default icon
-            sort_order: index + 1
-          })),
+        what_to_bring: whatToBringData,
         budgeting: [
-          { id: Date.now() + 100, item_name: 'Environmental Fee', item_amount: parseFloat(fees.environmentalFee) || 0, item_unit: 'per person', sort_order: 1 },
-          { id: Date.now() + 101, item_name: 'Overtime Fee', item_amount: parseFloat(fees.registrationFee) || 0, item_unit: 'per person', sort_order: 2 },
-          { id: Date.now() + 102, item_name: 'Food Stub', item_amount: parseFloat(fees.guideCampingFee) || 0, item_unit: 'per person', sort_order: 3 }
+          { 
+            id: Date.now() + 100, 
+            item_name: 'Environmental Fee', 
+            item_amount: fees.environmentalFee && fees.environmentalFee.trim() !== '' ? parseFloat(fees.environmentalFee) : 0, 
+            item_unit: 'per person', 
+            sort_order: 1 
+          },
+          { 
+            id: Date.now() + 101, 
+            item_name: 'Overtime Fee', 
+            item_amount: fees.registrationFee && fees.registrationFee.trim() !== '' ? parseFloat(fees.registrationFee) : 0, 
+            item_unit: 'per person', 
+            sort_order: 2 
+          },
+          { 
+            id: Date.now() + 102, 
+            item_name: 'Food Stub', 
+            item_amount: fees.guideCampingFee && fees.guideCampingFee.trim() !== '' ? parseFloat(fees.guideCampingFee) : 0, 
+            item_unit: 'per person', 
+            sort_order: 3 
+          }
         ],
-        itinerary: hikeItinerary
-          .filter(item => item.title.trim() !== '')
-          .map((item, index) => ({
-            id: Date.now() + 200 + index,
-            item_name: item.title,
-            item_description: item.description,
-            item_time: item.time,
-            item_duration: '2-3 hours', // Default duration
-            sort_order: index + 1
-          }))
+        itinerary: itineraryData
       };
+
+      // Debug logging for mountain details
+      console.log('Mountain details being saved:', {
+        what_to_bring: {
+          count: whatToBringData.length,
+          items: whatToBringData.map(item => item.item_name)
+        },
+        budgeting: {
+          count: mountainDetails.budgeting.length,
+          items: mountainDetails.budgeting.map(item => ({ name: item.item_name, amount: item.item_amount }))
+        },
+        itinerary: {
+          count: itineraryData.length,
+          items: itineraryData.map(item => ({ title: item.item_name, description: item.item_description, location: item.item_location, time: item.item_time }))
+        }
+      });
 
       // Filter out null images and prepare additional images array
       // Keep all images from slots 1-3 (indices 1-3), preserving order
@@ -344,7 +383,25 @@ function MountainForm() {
           slot: idx + 1,
           hasImage: !!img,
           willBeSaved: !!img
-        }))
+        })),
+        fees_debug: {
+          environmentalFee: fees.environmentalFee,
+          registrationFee: fees.registrationFee,
+          guideCampingFee: fees.guideCampingFee,
+          budgeting: mountainData.budgeting
+        },
+        what_to_bring_debug: {
+          original_count: thingsToBring.length,
+          original_items: thingsToBring,
+          filtered_count: mountainData.what_to_bring ? mountainData.what_to_bring.length : 0,
+          filtered_items: mountainData.what_to_bring
+        },
+        itinerary_debug: {
+          original_count: hikeItinerary.length,
+          original_items: hikeItinerary,
+          filtered_count: mountainData.itinerary ? mountainData.itinerary.length : 0,
+          filtered_items: mountainData.itinerary
+        }
       });
       
       // Validate that additional images are being sent
