@@ -389,7 +389,7 @@ function Admin() {
                     <tr key={mountain.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 text-sm text-gray-900 font-medium">{mountain.name}</td>
                       <td className="px-6 py-4 text-sm text-gray-600">{mountain.location}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{mountain.elevation}m</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{mountain.elevation.toLocaleString()} MASL</td>
                       <td className="px-6 py-4">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                           mountain.difficulty === 'Easy' ? 'bg-green-100 text-green-800' :

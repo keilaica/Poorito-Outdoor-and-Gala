@@ -239,7 +239,7 @@ function Receipt() {
                     </div>
                     <div className="flex items-baseline">
                       <span className="w-24 text-gray-600">Elevation:</span>
-                      <span className="font-medium text-gray-900">{receipt.mountain?.elevation}m</span>
+                      <span className="font-medium text-gray-900">{receipt.mountain?.elevation ? `${receipt.mountain.elevation.toLocaleString()} MASL` : 'N/A'}</span>
                     </div>
                   </div>
                   {receipt.mountain?.description && (

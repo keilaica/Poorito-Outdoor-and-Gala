@@ -223,7 +223,7 @@ function Analytics() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Average Elevation</p>
-                  <p className="text-3xl font-bold text-gray-900">{Math.round(analytics.mountains.overview?.avg_elevation || 0)}m</p>
+                  <p className="text-3xl font-bold text-gray-900">{Math.round(analytics.mountains.overview?.avg_elevation || 0).toLocaleString()} MASL</p>
                 </div>
                 <div className="text-3xl opacity-40">📏</div>
               </div>
@@ -233,7 +233,7 @@ function Analytics() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Highest Peak</p>
-                  <p className="text-3xl font-bold text-gray-900">{analytics.mountains.overview?.max_elevation || 0}m</p>
+                  <p className="text-3xl font-bold text-gray-900">{(analytics.mountains.overview?.max_elevation || 0).toLocaleString()} MASL</p>
                 </div>
                 <div className="text-3xl opacity-40">🔝</div>
               </div>
@@ -243,7 +243,7 @@ function Analytics() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Lowest Peak</p>
-                  <p className="text-3xl font-bold text-gray-900">{analytics.mountains.overview?.min_elevation || 0}m</p>
+                  <p className="text-3xl font-bold text-gray-900">{(analytics.mountains.overview?.min_elevation || 0).toLocaleString()} MASL</p>
                 </div>
                 <div className="text-3xl opacity-40">🔻</div>
               </div>

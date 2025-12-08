@@ -10,7 +10,8 @@ function MountainEditForm({ mountain, onSave, onCancel }) {
     difficulty: 'Easy',
     status: 'backtrail',
     meters_above_sea_level: '',
-    duration: ''
+    duration: '',
+    distance_km: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -25,7 +26,8 @@ function MountainEditForm({ mountain, onSave, onCancel }) {
         difficulty: mountain.difficulty || 'Easy',
         status: mountain.status || 'backtrail',
         meters_above_sea_level: mountain.meters_above_sea_level || '',
-        duration: mountain.duration || ''
+        duration: mountain.duration || '',
+        distance_km: mountain.distance_km != null && mountain.distance_km !== '' ? mountain.distance_km : ''
       });
     }
   }, [mountain]);
@@ -58,7 +60,10 @@ function MountainEditForm({ mountain, onSave, onCancel }) {
         difficulty: formData.difficulty,
         status: formData.status || 'backtrail',
         meters_above_sea_level: formData.meters_above_sea_level ? parseInt(formData.meters_above_sea_level) : null,
-        duration: formData.duration || null
+        duration: formData.duration || null,
+        distance_km: (formData.distance_km === '' || formData.distance_km === null || formData.distance_km === undefined)
+          ? null
+          : (isNaN(parseFloat(formData.distance_km)) ? null : parseFloat(formData.distance_km))
       };
 
       await apiService.updateMountain(mountain.id, updateData);
@@ -109,7 +114,7 @@ function MountainEditForm({ mountain, onSave, onCancel }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Distance (meters) *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Elevation (MASL) *</label>
             <input
               type="number"
               name="elevation"
@@ -143,6 +148,22 @@ function MountainEditForm({ mountain, onSave, onCancel }) {
             />
             <p className="text-xs text-gray-500 mt-1">
               Hike duration (e.g., "10-14 hours" or "10 hours")
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Distance (KM)</label>
+            <input
+              type="number"
+              step="0.01"
+              name="distance_km"
+              value={formData.distance_km}
+              onChange={handleChange}
+              placeholder="Distance in kilometers"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Distance in kilometers
             </p>
           </div>
 

@@ -7,10 +7,28 @@ const router = express.Router();
 // Get all mountains (public)
 router.get('/', async (req, res) => {
   try {
-    const { data: mountains, error } = await supabase
+    // Try to select with distance_km first
+    let { data: mountains, error } = await supabase
       .from('mountains')
-      .select('id, name, elevation, location, difficulty, description, image_url, additional_images, trip_duration, meters_above_sea_level, duration, base_price_per_head, joiner_capacity, exclusive_price, is_joiner_available, is_exclusive_available, created_at, updated_at')
+      .select('id, name, elevation, location, difficulty, description, image_url, additional_images, trip_duration, meters_above_sea_level, duration, distance_km, base_price_per_head, joiner_capacity, exclusive_price, is_joiner_available, is_exclusive_available, created_at, updated_at')
       .order('name', { ascending: true });
+
+    // If error is due to missing distance_km column, retry without it
+    if (error && error.message && error.message.includes('distance_km') && error.message.includes('does not exist')) {
+      console.warn('distance_km column does not exist, retrying without it. Please run migration: backend/database/migrations/add_distance_km_to_mountains.sql');
+      const retryResult = await supabase
+        .from('mountains')
+        .select('id, name, elevation, location, difficulty, description, image_url, additional_images, trip_duration, meters_above_sea_level, duration, base_price_per_head, joiner_capacity, exclusive_price, is_joiner_available, is_exclusive_available, created_at, updated_at')
+        .order('name', { ascending: true });
+      
+      mountains = retryResult.data;
+      error = retryResult.error;
+      
+      // Add null distance_km to each mountain for consistency
+      if (mountains) {
+        mountains = mountains.map(m => ({ ...m, distance_km: null }));
+      }
+    }
 
     if (error) {
       console.error('Get mountains error:', error);
@@ -73,7 +91,7 @@ router.get('/:id', async (req, res) => {
 // Create mountain (admin only) - temporarily without auth for testing
 router.post('/', async (req, res) => {
   try {
-    const { name, elevation, location, difficulty, description, status, image_url, additional_images, trip_duration, meters_above_sea_level, duration, base_price_per_head, joiner_capacity, exclusive_price, is_joiner_available, is_exclusive_available } = req.body;
+    const { name, elevation, location, difficulty, description, status, image_url, additional_images, trip_duration, meters_above_sea_level, duration, distance_km, base_price_per_head, joiner_capacity, exclusive_price, is_joiner_available, is_exclusive_available } = req.body;
     
     // Debug: Log received data
     console.log('Received mountain data:', {
@@ -83,6 +101,7 @@ router.post('/', async (req, res) => {
       difficulty,
       description,
       trip_duration,
+      distance_km,
       image_url: image_url ? `${image_url.substring(0, 50)}...` : 'No image',
       additional_images_count: additional_images ? additional_images.length : 0
     });
@@ -105,6 +124,9 @@ router.post('/', async (req, res) => {
           ? null 
           : (isNaN(parseInt(meters_above_sea_level)) ? null : parseInt(meters_above_sea_level)),
         duration: (duration === null || duration === '' || duration === undefined) ? null : duration,
+        distance_km: (distance_km === null || distance_km === '' || distance_km === undefined) 
+          ? null 
+          : (isNaN(parseFloat(distance_km)) ? null : parseFloat(distance_km)),
         image_url,
         additional_images: Array.isArray(additional_images) ? additional_images : [],
         base_price_per_head: base_price_per_head || 1599.00,
@@ -161,6 +183,7 @@ router.put('/:id', async (req, res) => {
       trip_duration,
       meters_above_sea_level,
       duration,
+      distance_km,
       base_price_per_head,
       joiner_capacity,
       exclusive_price,
@@ -172,7 +195,7 @@ router.put('/:id', async (req, res) => {
       how_to_get_there
     } = req.body;
 
-    console.log('Attempting to update mountain:', id, { name, elevation, location });
+    console.log('Attempting to update mountain:', id, { name, elevation, location, distance_km });
     console.log('Received pricing data:', {
       base_price_per_head,
       joiner_capacity,
@@ -213,6 +236,22 @@ router.put('/:id', async (req, res) => {
     if (duration !== undefined) {
       // Handle empty strings - convert to null
       updateData.duration = (duration === null || duration === '' || duration === undefined) ? null : duration;
+    }
+    if (distance_km !== undefined) {
+      // Handle empty strings, null, or undefined - convert to null
+      if (distance_km === null || distance_km === '' || distance_km === undefined) {
+        updateData.distance_km = null;
+      } else {
+        const parsed = parseFloat(distance_km);
+        updateData.distance_km = isNaN(parsed) ? null : parsed;
+      }
+      console.log('Processing distance_km update:', {
+        received: distance_km,
+        type: typeof distance_km,
+        parsed: updateData.distance_km
+      });
+    } else {
+      console.log('⚠️ distance_km is undefined in request body - will not be updated');
     }
     if (image_url !== undefined) updateData.image_url = image_url;
     if (base_price_per_head !== undefined) updateData.base_price_per_head = parseFloat(base_price_per_head) || 0;

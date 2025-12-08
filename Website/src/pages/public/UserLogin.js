@@ -91,7 +91,11 @@ function UserLogin() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off">
+            {/* Fake hidden inputs to prevent browser autofill */}
+            <input type="text" name="fakeusernameremembered" style={{ display: 'none' }} tabIndex="-1" />
+            <input type="password" name="fakepasswordremembered" style={{ display: 'none' }} tabIndex="-1" />
+            
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
                 Email Address
@@ -103,6 +107,10 @@ function UserLogin() {
                 value={formData.email}
                 onChange={handleChange}
                 required
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="none"
+                spellCheck="false"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
                 placeholder="Enter your email"
               />
@@ -127,6 +135,12 @@ function UserLogin() {
                 value={formData.password}
                 onChange={handleChange}
                 required
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="none"
+                spellCheck="false"
+                inputMode="none"
+                aria-autocomplete="none"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
                 placeholder="Enter your password"
               />

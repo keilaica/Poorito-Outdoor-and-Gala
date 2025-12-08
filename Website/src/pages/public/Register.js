@@ -118,7 +118,11 @@ function Register() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off">
+            {/* Fake hidden inputs to prevent browser autofill */}
+            <input type="text" name="fakeusernameremembered" style={{ display: 'none' }} tabIndex="-1" />
+            <input type="password" name="fakepasswordremembered" style={{ display: 'none' }} tabIndex="-1" />
+            
             <div>
               <label htmlFor="username" className="block text-sm font-semibold text-gray-700 mb-2">
                 Username
@@ -130,6 +134,10 @@ function Register() {
                 value={formData.username}
                 onChange={handleChange}
                 required
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="none"
+                spellCheck="false"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
                 placeholder="Enter your username"
               />
@@ -146,6 +154,10 @@ function Register() {
                 value={formData.email}
                 onChange={handleChange}
                 required
+                autoComplete="new-email"
+                autoCorrect="off"
+                autoCapitalize="none"
+                spellCheck="false"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
                 placeholder="Enter your email"
               />
@@ -162,6 +174,12 @@ function Register() {
                 value={formData.password}
                 onChange={handleChange}
                 required
+                autoComplete="new-password"
+                autoCorrect="off"
+                autoCapitalize="none"
+                spellCheck="false"
+                inputMode="none"
+                aria-autocomplete="none"
                 className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all ${
                   formData.password && !isPasswordValid
                     ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
@@ -212,6 +230,12 @@ function Register() {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 required
+                autoComplete="new-password"
+                autoCorrect="off"
+                autoCapitalize="none"
+                spellCheck="false"
+                inputMode="none"
+                aria-autocomplete="none"
                 className={`w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all ${
                   formData.confirmPassword && !passwordsMatch
                     ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
@@ -390,21 +414,21 @@ function Register() {
                 </div>
 
                 <div>
-                  <h3 className="font-bold text-gray-900 mb-2">9. Privacy Policy</h3>
+                  <h3 className="font-bold text-gray-900 mb-2">8. Privacy Policy</h3>
                   <p className="text-gray-700">
                     Your information will be collected and used according to our Privacy Policy. We will not share your personal data with third parties without your consent, except as required to process bookings.
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="font-bold text-gray-900 mb-2">10. Modifications to the Terms</h3>
+                  <h3 className="font-bold text-gray-900 mb-2">9. Modifications to the Terms</h3>
                   <p className="text-gray-700">
                     The platform may update these Terms & Conditions at any time. Continued use of the app signifies your acceptance of the updated terms.
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="font-bold text-gray-900 mb-2">11. Acceptance of Terms</h3>
+                  <h3 className="font-bold text-gray-900 mb-2">10. Acceptance of Terms</h3>
                   <p className="text-gray-700">
                     By checking the box and creating an account, you confirm that you have read, understood, and agreed to these Terms & Conditions.
                   </p>

@@ -100,7 +100,7 @@ const MountainCard = ({ mountain, viewMode }) => {
                   <div className="flex items-start text-sm">
                     <span className="w-7 h-7 flex items-center justify-center mr-2 text-xl flex-shrink-0">📏</span>
                     <div className="flex-1">
-                      <div className="font-semibold text-gray-900">{mountain.elevation.toLocaleString()}m</div>
+                      <div className="font-semibold text-gray-900">{mountain.distance_km != null && mountain.distance_km !== '' ? `${parseFloat(mountain.distance_km).toFixed(2)} KM` : 'N/A'}</div>
                       <div className="text-xs text-gray-500 mt-0.5">Distance</div>
                     </div>
                   </div>
@@ -194,7 +194,7 @@ const MountainCard = ({ mountain, viewMode }) => {
           </div>
           <div className="flex items-center text-sm text-gray-700">
             <span className="w-6 h-6 flex items-center justify-center mr-2 text-lg flex-shrink-0">📏</span>
-            <span className="font-medium">{mountain.elevation.toLocaleString()}m distance</span>
+            <span className="font-medium">{mountain.distance_km != null && mountain.distance_km !== '' ? `${parseFloat(mountain.distance_km).toFixed(2)} KM` : 'N/A'} distance</span>
           </div>
           <div className="flex items-center text-sm text-gray-700">
             <span className="w-6 h-6 flex items-center justify-center mr-2 text-lg flex-shrink-0">🏔️</span>
@@ -271,6 +271,11 @@ function Explore() {
           return a.name.localeCompare(b.name);
         case 'elevation':
           return b.elevation - a.elevation; // Highest first
+        case 'distance':
+          // Sort by distance_km (highest first), handle null/undefined values
+          const aDistance = a.distance_km != null && a.distance_km !== '' ? parseFloat(a.distance_km) : 0;
+          const bDistance = b.distance_km != null && b.distance_km !== '' ? parseFloat(b.distance_km) : 0;
+          return bDistance - aDistance; // Highest first
         case 'difficulty':
           const difficultyOrder = { 'Easy': 1, 'Moderate': 2, 'Hard': 3, 'Expert': 4 };
           return difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty];
@@ -381,7 +386,8 @@ function Explore() {
                     className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 sm:py-3.5 pr-10 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-sm hover:border-gray-300 cursor-pointer appearance-none bg-white touch-manipulation min-h-[44px]"
                   >
                     <option value="name">📝 Name (A-Z)</option>
-                    <option value="elevation">📏 Distance (High to Low)</option>
+                    <option value="elevation">🏔️ Elevation (High to Low)</option>
+                    <option value="distance">📏 Distance (High to Low)</option>
                     <option value="difficulty">⚠️ Difficulty (Easy to Hard)</option>
                     <option value="location">📍 Location (A-Z)</option>
                   </select>
@@ -495,10 +501,10 @@ function Explore() {
             <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8 text-center">Trail Difficulty Guide</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
               {[
-                { level: 'Easy', icon: '🟢', description: 'Well-marked trails, minimal elevation gain', time: '1-3 hours' },
-                { level: 'Moderate', icon: '🟡', description: 'Some steep sections, moderate fitness required', time: '3-6 hours' },
-                { level: 'Hard', icon: '🟠', description: 'Challenging terrain, good fitness essential', time: '6-10 hours' },
-                { level: 'Expert', icon: '🔴', description: 'Technical sections, experienced hikers only', time: '10+ hours' }
+                { level: 'Easy', icon: '🟢', description: 'Well-marked trails, minimal elevation gain', time: '1-2 hours' },
+                { level: 'Moderate', icon: '🟡', description: 'Some steep sections, moderate fitness required', time: '2-6 hours' },
+                { level: 'Hard', icon: '🟠', description: 'Challenging terrain, good fitness essential', time: '6-18 hours' },
+                { level: 'Expert', icon: '🔴', description: 'Technical sections, experienced hikers only', time: 'minimum of 3 days' }
               ].map(difficulty => (
                 <div key={difficulty.level} className="bg-white rounded-xl p-5 text-center shadow-sm hover:shadow-md transition-all border border-gray-200 hover:border-orange-300">
                   <div className="text-4xl mb-3">{difficulty.icon}</div>
@@ -527,7 +533,7 @@ function Explore() {
             <div className="bg-white rounded-xl p-7 text-center border border-gray-200 hover:shadow-lg transition-all hover:border-orange-300">
               <div className="text-4xl mb-3">📏</div>
               <div className="text-3xl font-bold text-gray-900 mb-1">
-                {mountains.length > 0 ? Math.max(...mountains.map(m => m.elevation)).toLocaleString() : 0}m
+                {mountains.length > 0 ? Math.max(...mountains.map(m => m.elevation)).toLocaleString() : 0} MASL
               </div>
               <div className="text-sm text-gray-600 font-medium">Highest Peak</div>
             </div>
@@ -536,7 +542,7 @@ function Explore() {
               <div className="text-3xl font-bold text-gray-900 mb-1">
                 {mountains.filter(m => m.difficulty === 'Easy').length}
               </div>
-              <div className="text-sm text-gray-600 font-medium">Easy Trails</div>
+              <div className="text-sm text-gray-600 font-medium">Beginner Friendly</div>
             </div>
           </div>
         </div>

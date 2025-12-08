@@ -21,17 +21,14 @@ function About() {
         <div className="mb-20">
           <div className="flex flex-col md:flex-row items-center gap-12">
             <div className="md:w-1/2">
-              <div className="bg-gradient-to-br from-orange-100 to-orange-50 rounded-2xl p-8 flex items-center justify-center h-80">
-                <div className="text-center">
-                  <div className="text-8xl mb-4">⛰️</div>
-                  <img
-                    src="/poorito-logo-nogb.png"
-                    alt="Poorito"
-                    className="h-24 w-24 mx-auto object-contain rounded-full shadow-lg"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                </div>
+              <div className="rounded-2xl overflow-hidden shadow-lg h-80">
+                <img
+                  src="/aboutimg.jpg"
+                  alt="Poorito hiking group"
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
               </div>
             </div>
             <div className="md:w-1/2">

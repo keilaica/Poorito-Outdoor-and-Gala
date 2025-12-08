@@ -20,3 +20,4 @@ COMMENT ON COLUMN mountains.trip_duration IS 'Number of days for the trip (defau
 
 
 
+

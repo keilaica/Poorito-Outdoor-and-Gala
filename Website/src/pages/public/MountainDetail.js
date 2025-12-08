@@ -861,9 +861,9 @@ function MountainDetail() {
                     <div className="text-xs text-gray-500">Elevation</div>
                     <div className="text-sm font-semibold text-gray-900">
                       {mountain.meters_above_sea_level 
-                        ? `${mountain.meters_above_sea_level.toLocaleString()}m` 
+                        ? `${mountain.meters_above_sea_level.toLocaleString()} MASL` 
                         : mountain.elevation 
-                          ? `${mountain.elevation.toLocaleString()}m` 
+                          ? `${mountain.elevation.toLocaleString()} MASL` 
                           : 'N/A'}
                     </div>
                   </div>
@@ -1573,7 +1573,7 @@ function MountainDetail() {
                   </div>
                   <div>
                     <span className="text-gray-500 font-medium">Distance:</span>
-                    <span className="text-gray-900 font-semibold ml-1">{mountain.elevation.toLocaleString()}m</span>
+                    <span className="text-gray-900 font-semibold ml-1">{mountain.distance_km != null && mountain.distance_km !== '' ? `${parseFloat(mountain.distance_km).toFixed(2)} KM` : 'N/A'}</span>
                   </div>
                   <div>
                     <span className="text-gray-500 font-medium">Pax:</span>

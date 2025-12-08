@@ -73,3 +73,4 @@ WHERE table_name = 'mountains'
 AND column_name IN ('what_to_bring', 'budgeting', 'itinerary', 'how_to_get_there')
 ORDER BY column_name;
 
+

@@ -490,7 +490,7 @@ const sendBookingConfirmation = async (userEmail, userName, bookingData, mountai
                   ${mountainData.elevation ? `
                   <div class="mountain-detail-item">
                     <span class="mountain-detail-label">Elevation</span>
-                    <span class="mountain-detail-value">${mountainData.elevation}m</span>
+                    <span class="mountain-detail-value">${mountainData.elevation.toLocaleString()} MASL</span>
                   </div>
                   ` : ''}
                   <div class="mountain-detail-item">
@@ -562,7 +562,7 @@ const sendBookingConfirmation = async (userEmail, userName, bookingData, mountai
         MOUNTAIN INFORMATION
         ──────────────────────────────────────
         Name: ${mountainData.name}
-        ${mountainData.location ? `Location: ${mountainData.location}\n` : ''}${mountainData.difficulty ? `Difficulty: ${mountainData.difficulty}\n` : ''}${mountainData.elevation ? `Elevation: ${mountainData.elevation}m\n` : ''}Pax: ${participantsText}
+        ${mountainData.location ? `Location: ${mountainData.location}\n` : ''}${mountainData.difficulty ? `Difficulty: ${mountainData.difficulty}\n` : ''}${mountainData.elevation ? `Elevation: ${mountainData.elevation.toLocaleString()} MASL\n` : ''}Pax: ${participantsText}
 
         IMPORTANT REMINDERS:
         • Please arrive on time for your scheduled hike

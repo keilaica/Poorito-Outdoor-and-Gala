@@ -17,6 +17,7 @@ function MountainForm() {
     trip_duration: 1,
     meters_above_sea_level: '',
     duration: '',
+    distance_km: '',
     base_price_per_head: 1599.00,
     joiner_capacity: 14,
     exclusive_price: null,
@@ -58,6 +59,7 @@ function MountainForm() {
           trip_duration: mountain.trip_duration || 1,
           meters_above_sea_level: mountain.meters_above_sea_level || '',
           duration: mountain.duration || '',
+          distance_km: mountain.distance_km != null && mountain.distance_km !== '' ? mountain.distance_km : '',
           base_price_per_head: mountain.base_price_per_head || 1599.00,
           joiner_capacity: mountain.joiner_capacity || 14,
           exclusive_price: mountain.exclusive_price !== undefined && mountain.exclusive_price !== null 
@@ -302,6 +304,9 @@ function MountainForm() {
           ? null
           : (isNaN(parseInt(formData.meters_above_sea_level)) ? null : parseInt(formData.meters_above_sea_level)),
         duration: (formData.duration === '' || formData.duration === null || formData.duration === undefined) ? null : formData.duration.trim(),
+        distance_km: (formData.distance_km === '' || formData.distance_km === null || formData.distance_km === undefined)
+          ? null
+          : (isNaN(parseFloat(formData.distance_km)) ? null : parseFloat(formData.distance_km)),
         base_price_per_head: parseFloat(formData.base_price_per_head) || 1599.00,
         joiner_capacity: parseInt(formData.joiner_capacity) || 14,
         exclusive_price: (() => {
@@ -327,6 +332,8 @@ function MountainForm() {
       // Debug: Log the data being sent
       console.log('Sending mountain data:', {
         ...mountainData,
+        distance_km: mountainData.distance_km,
+        distance_km_type: typeof mountainData.distance_km,
         image_url: images[0] ? `${images[0].substring(0, 50)}...` : 'No image',
         exclusive_price: mountainData.exclusive_price,
         exclusive_price_type: typeof mountainData.exclusive_price,
@@ -553,12 +560,12 @@ function MountainForm() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <label htmlFor="mountain-elevation" className="block text-sm font-medium text-gray-700 mb-2">
-              Distance (meters) <span className="text-red-500">*</span>
+              Elevation (MASL) <span className="text-red-500">*</span>
             </label>
             <input 
               id="mountain-elevation"
               type="number" 
-              placeholder="Distance (meters) *" 
+              placeholder="Elevation (MASL) *" 
               value={formData.elevation}
               onChange={(e) => handleInputChange('elevation', e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
@@ -638,6 +645,27 @@ function MountainForm() {
             />
             <p className="text-xs text-gray-500 mt-1">
               Hike duration (e.g., "10-14 hours" or "10 hours")
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="mountain-distance-km" className="block text-sm font-medium text-gray-700 mb-2">
+              Distance (KM)
+            </label>
+            <input 
+              id="mountain-distance-km"
+              type="number" 
+              step="0.01"
+              name="distance_km"
+              placeholder="Distance in kilometers" 
+              value={formData.distance_km}
+              onChange={(e) => handleInputChange('distance_km', e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Distance in kilometers
             </p>
           </div>
         </div>

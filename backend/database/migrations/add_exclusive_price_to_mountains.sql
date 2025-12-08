@@ -17,3 +17,4 @@ COMMENT ON COLUMN mountains.exclusive_price IS 'Fixed total price for exclusive 
 
 
 
+

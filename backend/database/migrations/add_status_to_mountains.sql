@@ -24,3 +24,4 @@ ALTER TABLE mountains
 ALTER COLUMN status SET DEFAULT 'backtrail';
 
 
+

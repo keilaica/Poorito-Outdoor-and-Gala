@@ -873,7 +873,8 @@ router.get('/:id/receipt', authenticateToken, async (req, res) => {
     const user_id = req.user.userId;
 
     // Get booking with mountain details
-    const { data: booking, error: bookingError } = await supabase
+    // Try with distance_km first, fallback without it if column doesn't exist
+    let { data: booking, error: bookingError } = await supabase
       .from('bookings')
       .select(`
         id,
@@ -891,6 +892,7 @@ router.get('/:id/receipt', authenticateToken, async (req, res) => {
           location,
           difficulty,
           elevation,
+          distance_km,
           description,
           image_url,
           budgeting
@@ -899,6 +901,45 @@ router.get('/:id/receipt', authenticateToken, async (req, res) => {
       .eq('id', id)
       .eq('user_id', user_id)
       .single();
+
+    // If error is due to missing distance_km column, retry without it
+    if (bookingError && bookingError.message && bookingError.message.includes('distance_km') && bookingError.message.includes('does not exist')) {
+      console.warn('distance_km column does not exist, retrying without it. Please run migration: backend/database/migrations/add_distance_km_to_mountains.sql');
+      const retryResult = await supabase
+        .from('bookings')
+        .select(`
+          id,
+          mountain_id,
+          start_date,
+          end_date,
+          booking_date,
+          status,
+          number_of_participants,
+          created_at,
+          updated_at,
+          mountains (
+            id,
+            name,
+            location,
+            difficulty,
+            elevation,
+            description,
+            image_url,
+            budgeting
+          )
+        `)
+        .eq('id', id)
+        .eq('user_id', user_id)
+        .single();
+      
+      booking = retryResult.data;
+      bookingError = retryResult.error;
+      
+      // Add null distance_km to mountain data for consistency
+      if (booking && booking.mountains) {
+        booking.mountains.distance_km = null;
+      }
+    }
 
     if (bookingError || !booking) {
       return res.status(404).json({ error: 'Booking not found' });

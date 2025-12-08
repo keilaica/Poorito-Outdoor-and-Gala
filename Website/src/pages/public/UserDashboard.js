@@ -290,7 +290,7 @@ function UserDashboard() {
                                 {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                               </span>
                               <span className="text-sm text-gray-600 font-medium">
-                                {booking.mountains?.difficulty} • {booking.mountains?.elevation}m
+                                {booking.mountains?.difficulty} • {booking.mountains?.elevation ? `${booking.mountains.elevation.toLocaleString()} MASL` : 'N/A'}
                               </span>
                             </div>
                           </div>

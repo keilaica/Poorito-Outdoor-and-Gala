@@ -44,3 +44,4 @@ COMMENT ON COLUMN mountains.is_exclusive_available IS 'Whether exclusive (privat
 
 
 
+
