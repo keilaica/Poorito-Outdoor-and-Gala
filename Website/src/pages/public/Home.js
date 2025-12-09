@@ -267,16 +267,78 @@ function Home() {
                 </div>
               )}
               
-              {/* LUZON Results */}
-              {filteredLuzon.length > 0 && (
-                <div>
-                  {cityQuery && (
-                    <h3 className="text-xl font-semibold text-gray-900 mb-4">LUZON Trails</h3>
-                  )}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {filteredLuzon.slice(0, cityQuery ? filteredLuzon.length : 4).map((mountain) => (
-                      <div key={mountain.id} className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100">
-                        <div className="relative h-44 bg-orange-500 overflow-hidden">
+              {/* Combined Grid when no search, separate sections when searching */}
+              {!cityQuery ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" style={{ gridAutoRows: '1fr' }}>
+                  {filteredMountains.slice(0, 8).map((mountain) => (
+                    <div key={mountain.id} className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 border border-gray-100 flex flex-col" style={{ height: '100%' }}>
+                      <div className="relative bg-orange-500 overflow-hidden flex-shrink-0" style={{ height: '176px', minHeight: '176px', maxHeight: '176px' }}>
+                        {mountain.image_url ? (
+                          <img 
+                            src={mountain.image_url} 
+                            alt={mountain.name} 
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            loading="lazy"
+                            decoding="async"
+                            style={{ height: '100%', width: '100%', objectFit: 'cover' }}
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-white text-6xl opacity-50">⛰️</span>
+                          </div>
+                        )}
+                        <div className="absolute top-3 right-3">
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-semibold backdrop-blur-sm border ${
+                            mountain.difficulty === 'Easy' ? 'bg-green-500/90 text-white border-green-400' :
+                            mountain.difficulty === 'Moderate' ? 'bg-yellow-500/90 text-white border-yellow-400' :
+                            mountain.difficulty === 'Hard' ? 'bg-orange-500/90 text-white border-orange-400' :
+                            'bg-red-500/90 text-white border-red-400'
+                          }`}>
+                            {mountain.difficulty}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="p-5 flex flex-col flex-grow">
+                        <h3 className="font-bold text-gray-900 text-lg mb-3 group-hover:text-orange-600 transition-colors">{mountain.name}</h3>
+                        <div className="space-y-2 mb-4 flex-grow">
+                          <div className="flex items-center text-sm text-gray-600">
+                            <span className="mr-2 text-base">📍</span>
+                            <span className="truncate">Location: <span className="font-medium text-gray-900">{mountain.location}</span></span>
+                          </div>
+                          <div className="flex items-center text-sm text-gray-600">
+                            <span className="mr-2 text-base">📏</span>
+                            <span>Distance: <span className="font-medium text-gray-900">{mountain.distance_km != null && mountain.distance_km !== '' ? `${parseFloat(mountain.distance_km).toFixed(2)} KM` : 'N/A'}</span></span>
+                          </div>
+                          <div className="flex items-center text-sm text-gray-600">
+                            <span className="mr-2 text-base">⚡</span>
+                            <span>Difficulty: <span className={`font-semibold ${
+                              mountain.difficulty === 'Easy' ? 'text-green-600' :
+                              mountain.difficulty === 'Moderate' ? 'text-yellow-600' :
+                              mountain.difficulty === 'Hard' ? 'text-orange-600' :
+                              'text-red-600'
+                            }`}>{mountain.difficulty}</span></span>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => navigate(`/mountains/${mountain.id}`)}
+                          className="mt-auto w-full px-4 py-3 sm:py-2.5 rounded-lg text-white text-sm font-semibold bg-orange-600 hover:bg-orange-700 shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 touch-manipulation min-h-[44px]"
+                        >
+                          Explore
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <>
+                  {/* LUZON Results */}
+                  {filteredLuzon.length > 0 && (
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-4">LUZON Trails</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" style={{ gridAutoRows: '1fr' }}>
+                        {filteredLuzon.map((mountain) => (
+                      <div key={mountain.id} className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 border border-gray-100 flex flex-col" style={{ height: '100%' }}>
+                        <div className="relative bg-orange-500 overflow-hidden flex-shrink-0" style={{ height: '176px', minHeight: '176px', maxHeight: '176px' }}>
                           {mountain.image_url ? (
                             <img 
                               src={mountain.image_url} 
@@ -284,13 +346,13 @@ function Home() {
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                               loading="lazy"
                               decoding="async"
+                              style={{ height: '100%', width: '100%', objectFit: 'cover' }}
                             />
                           ) : (
                             <div className="absolute inset-0 flex items-center justify-center">
                               <span className="text-white text-6xl opacity-50">⛰️</span>
                             </div>
                           )}
-                          <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors" />
                           <div className="absolute top-3 right-3">
                             <span className={`px-2.5 py-1 rounded-full text-xs font-semibold backdrop-blur-sm border ${
                               mountain.difficulty === 'Easy' ? 'bg-green-500/90 text-white border-green-400' :
@@ -301,11 +363,10 @@ function Home() {
                               {mountain.difficulty}
                             </span>
                           </div>
-                          <div className="absolute bottom-0 left-0 right-0 h-24 bg-black/30" />
                         </div>
-                        <div className="p-5">
+                        <div className="p-5 flex flex-col flex-grow">
                           <h3 className="font-bold text-gray-900 text-lg mb-3 group-hover:text-orange-600 transition-colors">{mountain.name}</h3>
-                          <div className="space-y-2 mb-4">
+                          <div className="space-y-2 mb-4 flex-grow">
                             <div className="flex items-center text-sm text-gray-600">
                               <span className="mr-2 text-base">📍</span>
                               <span className="truncate">Location: <span className="font-medium text-gray-900">{mountain.location}</span></span>
@@ -326,27 +387,25 @@ function Home() {
                           </div>
                           <button 
                             onClick={() => navigate(`/mountains/${mountain.id}`)}
-                            className="w-full px-4 py-3 sm:py-2.5 rounded-lg text-white text-sm font-semibold bg-orange-600 hover:bg-orange-700 shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 touch-manipulation min-h-[44px]"
+                            className="mt-auto w-full px-4 py-3 sm:py-2.5 rounded-lg text-white text-sm font-semibold bg-orange-600 hover:bg-orange-700 shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 touch-manipulation min-h-[44px]"
                           >
                             Explore
                           </button>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
-              {/* Beyond LUZON Results */}
-              {filteredBeyond.length > 0 && (
-                <div>
-                  {cityQuery && (
-                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Beyond LUZON</h3>
+                        ))}
+                      </div>
+                    </div>
                   )}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {filteredBeyond.slice(0, cityQuery ? filteredBeyond.length : 4).map((mountain) => (
-                      <div key={mountain.id} className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100">
-                        <div className="relative h-44 bg-orange-500 overflow-hidden">
+                  
+                  {/* Beyond LUZON Results */}
+                  {filteredBeyond.length > 0 && (
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-4">Beyond LUZON</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" style={{ gridAutoRows: '1fr' }}>
+                        {filteredBeyond.map((mountain) => (
+                      <div key={mountain.id} className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 border border-gray-100 flex flex-col" style={{ height: '100%' }}>
+                        <div className="relative bg-orange-500 overflow-hidden flex-shrink-0" style={{ height: '176px', minHeight: '176px', maxHeight: '176px' }}>
                           {mountain.image_url ? (
                             <img 
                               src={mountain.image_url} 
@@ -354,13 +413,13 @@ function Home() {
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                               loading="lazy"
                               decoding="async"
+                              style={{ height: '100%', width: '100%', objectFit: 'cover' }}
                             />
                           ) : (
                             <div className="absolute inset-0 flex items-center justify-center">
                               <span className="text-white text-6xl opacity-50">⛰️</span>
                             </div>
                           )}
-                          <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors" />
                           <div className="absolute top-3 right-3">
                             <span className={`px-2.5 py-1 rounded-full text-xs font-semibold backdrop-blur-sm border ${
                               mountain.difficulty === 'Easy' ? 'bg-green-500/90 text-white border-green-400' :
@@ -371,11 +430,10 @@ function Home() {
                               {mountain.difficulty}
                             </span>
                           </div>
-                          <div className="absolute bottom-0 left-0 right-0 h-24 bg-black/30" />
                         </div>
-                        <div className="p-5">
+                        <div className="p-5 flex flex-col flex-grow">
                           <h3 className="font-bold text-gray-900 text-lg mb-3 group-hover:text-orange-600 transition-colors">{mountain.name}</h3>
-                          <div className="space-y-2 mb-4">
+                          <div className="space-y-2 mb-4 flex-grow">
                             <div className="flex items-center text-sm text-gray-600">
                               <span className="mr-2 text-base">📍</span>
                               <span className="truncate">Location: <span className="font-medium text-gray-900">{mountain.location}</span></span>
@@ -396,15 +454,17 @@ function Home() {
                           </div>
                           <button 
                             onClick={() => navigate(`/mountains/${mountain.id}`)}
-                            className="w-full px-4 py-3 sm:py-2.5 rounded-lg text-white text-sm font-semibold bg-orange-600 hover:bg-orange-700 shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 touch-manipulation min-h-[44px]"
+                            className="mt-auto w-full px-4 py-3 sm:py-2.5 rounded-lg text-white text-sm font-semibold bg-orange-600 hover:bg-orange-700 shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 touch-manipulation min-h-[44px]"
                           >
                             Explore
                           </button>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}

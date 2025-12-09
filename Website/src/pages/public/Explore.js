@@ -154,33 +154,32 @@ const MountainCard = ({ mountain, viewMode }) => {
   // Grid view
   return (
     <div 
-      className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-200 border border-gray-100 flex flex-col h-full cursor-pointer"
+      className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-200 border border-gray-100 flex flex-col cursor-pointer"
       onClick={handleCardClick}
       onKeyDown={handleKeyDown}
       tabIndex={0}
       role="button"
       aria-label={`View details for ${mountain.name}`}
-      style={{ transition: 'transform 200ms, box-shadow 200ms' }}
+      style={{ height: '100%', transition: 'transform 200ms, box-shadow 200ms' }}
     >
-      <div className="relative h-56 bg-orange-500 overflow-hidden flex-shrink-0">
+      <div className="relative bg-orange-500 overflow-hidden flex-shrink-0" style={{ height: '224px', minHeight: '224px', maxHeight: '224px' }}>
         {mountain.image_url ? (
           <img 
             src={mountain.image_url} 
             alt={mountain.name} 
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            style={{ height: '100%', width: '100%', objectFit: 'cover' }}
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
             <span className="text-white text-7xl opacity-50">⛰️</span>
           </div>
         )}
-        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/25 transition-all" />
         <div className="absolute top-4 right-4">
           <span className={`px-3 py-1.5 rounded-full text-xs font-semibold border backdrop-blur-sm shadow-md ${getDifficultyColor(mountain.difficulty)}`}>
             {mountain.difficulty}
           </span>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-24 bg-black/30" />
       </div>
       
       <div className="p-6 flex flex-col flex-grow">
@@ -441,7 +440,7 @@ function Explore() {
             )}
           </div>
         ) : (
-          <div className={`${viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7 lg:gap-8' : 'space-y-5'} mb-16`}>
+          <div className={`${viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-7' : 'space-y-5'} mb-16`} style={viewMode === 'grid' ? { gridAutoRows: '1fr' } : {}}>
             {filtered.map((mountain) => (
               <MountainCard 
                 key={mountain.id} 

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import LandscapeView from '../../components/LandscapeView';
 import apiService from '../../services/api';
 
 function Guides() {
@@ -168,11 +167,6 @@ function Guides() {
               </ul>
             </div>
           ))}
-        </div>
-
-        {/* Illustration / hero visual */}
-        <div className="mb-14 rounded-3xl overflow-hidden shadow-xl border border-gray-100 bg-white">
-          <LandscapeView className="h-full min-h-[420px] w-full" />
         </div>
 
         {/* Articles Section */}
