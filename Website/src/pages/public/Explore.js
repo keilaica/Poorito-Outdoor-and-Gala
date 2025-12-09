@@ -168,6 +168,8 @@ const MountainCard = ({ mountain, viewMode }) => {
             src={mountain.image_url} 
             alt={mountain.name} 
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            loading="lazy"
+            decoding="async"
             style={{ height: '100%', width: '100%', objectFit: 'cover' }}
           />
         ) : (
@@ -224,10 +226,17 @@ function Explore() {
   const [viewMode, setViewMode] = useState('grid'); // grid or list
   const [mountains, setMountains] = useState([]);
   const [loading, setLoading] = useState(true);
+  const CACHE_KEY = 'mountains:list:v1';
 
   // Fetch mountains from API
   useEffect(() => {
+    // If we navigated here with preloaded mountains (from Home), use them first
+    if (location.state?.mountains && Array.isArray(location.state.mountains) && location.state.mountains.length > 0) {
+      setMountains(location.state.mountains);
+      setLoading(false);
+    }
     fetchMountains();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Handle search query from navigation state
@@ -239,12 +248,46 @@ function Explore() {
 
   const fetchMountains = async () => {
     try {
+      // Serve instantly from cache while background-refreshing
+      const cached = sessionStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed)) {
+          setMountains(parsed);
+          setLoading(false);
+        }
+      }
+
       setLoading(true);
       const response = await apiService.getMountains();
-      setMountains(response.mountains || []);
+      const list = response.mountains || [];
+      setMountains(list);
+
+      // Store a slimmed-down version to avoid quota issues (drop big blobs)
+      const slim = list.map((m) => ({
+        id: m.id,
+        name: m.name,
+        location: m.location,
+        difficulty: m.difficulty,
+        elevation: m.elevation,
+        distance_km: m.distance_km,
+        image_url: m.image_url,
+        description: m.description,
+        status: m.status,
+        created_at: m.created_at,
+      }));
+
+      // Only cache if it fits; ignore storage errors
+      try {
+        const payload = JSON.stringify(slim);
+        if (payload.length < 4_000_000) { // ~4MB safety threshold
+          sessionStorage.setItem(CACHE_KEY, payload);
+        }
+      } catch (storageErr) {
+        console.warn('Skipping cache due to storage limits', storageErr);
+      }
     } catch (err) {
       console.error('Error fetching mountains:', err);
-      // Fallback to empty array on error
       setMountains([]);
     } finally {
       setLoading(false);

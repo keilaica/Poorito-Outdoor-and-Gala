@@ -25,11 +25,14 @@ const validateInt = (value, fieldName, res) => {
 // Get all mountains (public)
 router.get('/', async (req, res) => {
   try {
-    // Try to select with distance_km first, wrapped with timeout and retry
+    // Try to select with distance_km first, wrapped with timeout and retry.
+    // IMPORTANT: keep this payload lightweight for fast Explore/Home loads.
     let result = await withRetry(() => {
       return supabase
         .from('mountains')
-        .select('id, name, elevation, location, difficulty, description, image_url, additional_images, trip_duration, meters_above_sea_level, duration, distance_km, base_price_per_head, joiner_capacity, exclusive_price, is_joiner_available, is_exclusive_available, created_at, updated_at')
+        // Do NOT include large JSON/image blobs here (e.g. additional_images).
+        // Detail-heavy fields are fetched via /mountains/:id or /mountains/:id/details.
+        .select('id, name, elevation, location, difficulty, description, image_url, trip_duration, meters_above_sea_level, duration, distance_km, base_price_per_head, joiner_capacity, exclusive_price, is_joiner_available, is_exclusive_available, created_at, updated_at')
         .order('name', { ascending: true });
     }, 2, 1000); // 2 retries with 1s initial delay
     
