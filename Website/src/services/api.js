@@ -47,6 +47,7 @@ class ApiService {
     
     const config = {
       headers: this.getHeaders(),
+      credentials: 'include',
       ...options,
     };
 

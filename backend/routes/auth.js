@@ -5,6 +5,27 @@ const supabase = require('../config/database');
 const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
+const isProduction = process.env.NODE_ENV === 'production';
+const cookieOptionsBase = {
+  httpOnly: true,
+  secure: isProduction,
+  sameSite: isProduction ? 'none' : 'lax',
+  path: '/',
+  maxAge: 24 * 60 * 60 * 1000, // 1 day
+};
+
+const getCookieOptions = () => ({
+  ...cookieOptionsBase,
+  ...(process.env.COOKIE_DOMAIN ? { domain: process.env.COOKIE_DOMAIN } : {}),
+});
+
+const setAuthCookie = (res, token) => {
+  res.cookie('poorito_token', token, getCookieOptions());
+};
+
+const clearAuthCookie = (res) => {
+  res.clearCookie('poorito_token', { ...getCookieOptions(), maxAge: undefined });
+};
 
 // Register
 router.post('/register', async (req, res) => {
@@ -125,6 +146,8 @@ router.post('/register', async (req, res) => {
       { expiresIn: '24h' }
     );
 
+    setAuthCookie(res, token);
+
     res.status(201).json({
       message: 'User registered successfully',
       token,
@@ -153,6 +176,8 @@ router.post('/login', async (req, res) => {
         { expiresIn: '24h' }
       );
       
+      setAuthCookie(res, token);
+
       return res.json({
         message: 'Login successful',
         token,
@@ -206,6 +231,8 @@ router.post('/login', async (req, res) => {
       { expiresIn: '24h' }
     );
 
+    setAuthCookie(res, token);
+
     res.json({
       message: 'Login successful',
       token,
@@ -222,6 +249,8 @@ router.post('/login', async (req, res) => {
         { expiresIn: '24h' }
       );
       
+      setAuthCookie(res, token);
+
       return res.json({
         message: 'Login successful',
         token,
@@ -259,6 +288,7 @@ router.get('/me', authenticateToken, async (req, res) => {
 
 // Logout (client-side token removal)
 router.post('/logout', (req, res) => {
+  clearAuthCookie(res);
   res.json({ message: 'Logout successful' });
 });
 

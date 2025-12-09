@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
@@ -14,6 +15,9 @@ const { scheduleBookingCleanup } = require('./services/bookingCleanup');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Trust proxy is needed so secure cookies work behind Railway's proxy
+app.set('trust proxy', 1);
 
 // Security middleware
 app.use(helmet());
@@ -50,6 +54,9 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// Cookie parser for reading auth cookies
+app.use(cookieParser());
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
