@@ -389,32 +389,6 @@ function PublicLayout() {
         <Outlet />
       </main>
 
-      <footer className="border-t border-gray-100 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
-          <div className="flex flex-col md:flex-row items-center md:justify-between mb-6 gap-4">
-            <div className="flex items-center space-x-3">
-            <img
-              src="/poorito-logo-nogb.png"
-              alt="Poorito"
-              className="h-10 w-10 object-contain rounded-full shadow-sm"
-              loading="lazy"
-              decoding="async"
-            />
-              <span className="font-bold text-lg">Poorito</span>
-            </div>
-            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm text-gray-600">
-              <a href="#" className="hover:text-gray-900 touch-manipulation min-h-[44px] flex items-center">Privacy</a>
-              <a href="#" className="hover:text-gray-900 touch-manipulation min-h-[44px] flex items-center">Terms</a>
-              <a href="#" className="hover:text-gray-900 touch-manipulation min-h-[44px] flex items-center">Contact</a>
-              <Link to="/admin-login" className="hover:text-gray-900 touch-manipulation min-h-[44px] flex items-center">Admin Portal</Link>
-            </div>
-          </div>
-          <div className="text-center md:text-left text-sm text-gray-500">
-            <p>© {new Date().getFullYear()} Poorito. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
-
       {/* Floating Messenger Chat Button */}
       <a
         href="https://m.me/61558322062223"
