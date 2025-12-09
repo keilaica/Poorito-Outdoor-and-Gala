@@ -30,11 +30,64 @@ const createTransporter = () => {
 };
 
 /**
+ * Shared helper to build basic booking formatting (dates, counts, etc.)
+ */
+const formatBookingInfo = (bookingData) => {
+  const startDate = bookingData.start_date || bookingData.booking_date;
+  const endDate = bookingData.end_date || bookingData.booking_date;
+  const bookingStartDate = new Date(startDate);
+  const bookingEndDate = new Date(endDate);
+
+  const formattedStartDate = bookingStartDate.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  const formattedEndDate = bookingEndDate.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  const formattedDate = startDate === endDate
+    ? formattedStartDate
+    : `${formattedStartDate} - ${formattedEndDate}`;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const daysUntil = Math.ceil((bookingStartDate - today) / (1000 * 60 * 60 * 24));
+
+  const formattedTime = bookingStartDate.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
+
+  const numberOfParticipants = bookingData.number_of_participants ? parseInt(bookingData.number_of_participants) : 1;
+  const participantsText = `${numberOfParticipants} ${numberOfParticipants === 1 ? 'person' : 'people'}`;
+
+  const bookingType = bookingData.booking_type || 'joiner';
+  const bookingTypeText = bookingType === 'exclusive' ? 'Exclusive Hike (Private Group)' : 'Joiner (Shared Group Hike)';
+
+  const totalAmount = bookingData.total_price ? parseFloat(bookingData.total_price).toFixed(2) : '0.00';
+  const formattedAmount = `₱${parseFloat(totalAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  return {
+    bookingStartDate,
+    formattedDate,
+    daysUntil,
+    formattedTime,
+    participantsText,
+    bookingTypeText,
+    formattedAmount
+  };
+};
+
+/**
  * Send booking confirmation email
- * @param {string} userEmail - Recipient email address
- * @param {string} userName - Recipient name
- * @param {Object} bookingData - Booking information
- * @param {Object} mountainData - Mountain information
  */
 const sendBookingConfirmation = async (userEmail, userName, bookingData, mountainData) => {
   try {
@@ -61,54 +114,15 @@ const sendBookingConfirmation = async (userEmail, userName, bookingData, mountai
       throw new Error(`SMTP connection failed: ${verifyError.message}`);
     }
 
-    // Format booking date(s) - handle date range
-    const startDate = bookingData.start_date || bookingData.booking_date;
-    const endDate = bookingData.end_date || bookingData.booking_date;
-    const bookingStartDate = new Date(startDate);
-    const bookingEndDate = new Date(endDate);
-    
-    const formattedStartDate = bookingStartDate.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-    
-    const formattedEndDate = bookingEndDate.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-    
-    // Format date range for display
-    const formattedDate = startDate === endDate 
-      ? formattedStartDate 
-      : `${formattedStartDate} - ${formattedEndDate}`;
-
-    // Calculate days until booking
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const daysUntil = Math.ceil((bookingStartDate - today) / (1000 * 60 * 60 * 24));
-    
-    // Format time (if available)
-    const formattedTime = bookingStartDate.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
-
-    // Format number of participants
-    const numberOfParticipants = bookingData.number_of_participants ? parseInt(bookingData.number_of_participants) : 1;
-    const participantsText = `${numberOfParticipants} ${numberOfParticipants === 1 ? 'person' : 'people'}`;
-    
-    // Format booking type
-    const bookingType = bookingData.booking_type || 'joiner';
-    const bookingTypeText = bookingType === 'exclusive' ? 'Exclusive Hike (Private Group)' : 'Joiner (Shared Group Hike)';
-    
-    // Format total amount
-    const totalAmount = bookingData.total_price ? parseFloat(bookingData.total_price).toFixed(2) : '0.00';
-    const formattedAmount = `₱${parseFloat(totalAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const {
+      bookingStartDate,
+      formattedDate,
+      daysUntil,
+      formattedTime,
+      participantsText,
+      bookingTypeText,
+      formattedAmount
+    } = formatBookingInfo(bookingData);
 
     // Email content
     const mailOptions = {
@@ -612,6 +626,184 @@ const sendBookingConfirmation = async (userEmail, userName, bookingData, mountai
 };
 
 /**
+ * Send booking rejection email
+ * @param {string} userEmail - Recipient email address
+ * @param {string} userName - Recipient name
+ * @param {Object} bookingData - Booking information
+ * @param {Object} mountainData - Mountain information
+ * @param {string|null} reason - Optional rejection reason
+ */
+const sendBookingRejection = async (userEmail, userName, bookingData, mountainData, reason = null) => {
+  try {
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
+      console.log('⚠️  Email not configured. Skipping rejection notification.');
+      return { success: false, message: 'Email not configured' };
+    }
+
+    console.log('📧 Attempting to send booking rejection email to:', userEmail);
+    console.log('📧 Using SMTP host:', process.env.SMTP_HOST || 'smtp.gmail.com');
+
+    const transporter = createTransporter();
+
+    try {
+      await transporter.verify();
+      console.log('✅ SMTP server connection verified');
+    } catch (verifyError) {
+      console.error('❌ SMTP server verification failed:', verifyError.message);
+      throw new Error(`SMTP connection failed: ${verifyError.message}`);
+    }
+
+    const {
+      formattedDate,
+      participantsText,
+      bookingTypeText
+    } = formatBookingInfo(bookingData);
+
+    const mailOptions = {
+      from: `"Poorito Team" <${process.env.SMTP_USER}>`,
+      to: userEmail,
+      subject: `Booking Update: ${mountainData.name} (Rejected)`,
+      html: `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+              background-color: #f9fafb;
+              color: #111827;
+            }
+            .wrapper {
+              max-width: 600px;
+              margin: 0 auto;
+              background: #ffffff;
+              border-radius: 8px;
+              border: 1px solid #e5e7eb;
+              overflow: hidden;
+            }
+            .header {
+              background-color: #ef4444;
+              padding: 24px 32px;
+              color: #ffffff;
+              text-align: center;
+            }
+            .header-title {
+              font-size: 22px;
+              font-weight: 700;
+              margin: 0;
+            }
+            .body {
+              padding: 32px;
+            }
+            .greeting {
+              font-size: 16px;
+              margin-bottom: 16px;
+              font-weight: 500;
+            }
+            .text {
+              font-size: 14px;
+              color: #4b5563;
+              margin-bottom: 16px;
+              line-height: 1.7;
+            }
+            .card {
+              margin-top: 24px;
+              padding: 20px;
+              border-radius: 8px;
+              background-color: #f9fafb;
+              border: 1px solid #e5e7eb;
+            }
+            .label {
+              font-size: 11px;
+              text-transform: uppercase;
+              letter-spacing: 0.08em;
+              color: #6b7280;
+              margin-bottom: 4px;
+            }
+            .value {
+              font-size: 14px;
+              font-weight: 600;
+              color: #111827;
+              margin-bottom: 12px;
+            }
+            .footer {
+              padding: 20px 32px 28px;
+              font-size: 12px;
+              color: #9ca3af;
+              text-align: center;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="wrapper">
+            <div class="header">
+              <h1 class="header-title">Booking Request Rejected</h1>
+            </div>
+            <div class="body">
+              <p class="greeting">Hi ${userName},</p>
+              <p class="text">
+                Thank you for your interest in hiking <strong>${mountainData.name}</strong>. 
+                After reviewing your request, we’re unable to confirm this booking at this time.
+              </p>
+              ${reason ? `
+                <div class="card">
+                  <div class="label">Reason</div>
+                  <div class="value">${reason}</div>
+                </div>
+              ` : ''}
+              <div class="card">
+                <div class="label">Trip details</div>
+                <div class="value">Mountain: ${mountainData.name}</div>
+                <div class="value">Dates: ${formattedDate}</div>
+                <div class="value">Group: ${participantsText}</div>
+                <div class="value">Type: ${bookingTypeText}</div>
+              </div>
+              <p class="text" style="margin-top: 20px;">
+                You can always submit a new request for different dates or a different mountain that fits your plans.
+              </p>
+            </div>
+            <div class="footer">
+              Best regards,<br />
+              The Poorito Team
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+      text: `
+        Booking Request Rejected - Poorito
+
+        Hi ${userName},
+
+        Thank you for your interest in hiking ${mountainData.name}. After reviewing your request, we're unable to confirm this booking at this time.
+        ${reason ? `Reason: ${reason}\n\n` : ''}
+        Trip details:
+        - Mountain: ${mountainData.name}
+        - Dates: ${formattedDate}
+        - Group: ${participantsText}
+        - Type: ${bookingTypeText}
+
+        You can submit a new booking request for different dates or a different mountain.
+
+        Best regards,
+        The Poorito Team
+      `,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log('✅ Booking rejection email sent successfully!');
+    console.log('   Message ID:', info.messageId);
+    console.log('   Response:', info.response);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('❌ Error sending booking rejection email:', error);
+    return { success: false, error: error.message, code: error.code };
+  }
+};
+
+/**
  * Send password reset email
  * @param {string} userEmail - Recipient email address
  * @param {string} userName - Recipient name
@@ -841,6 +1033,7 @@ const sendPasswordResetEmail = async (userEmail, userName, resetLink) => {
 
 module.exports = {
   sendBookingConfirmation,
+  sendBookingRejection,
   sendPasswordResetEmail,
 };
 

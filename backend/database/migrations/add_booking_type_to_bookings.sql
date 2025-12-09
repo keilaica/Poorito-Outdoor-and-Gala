@@ -31,3 +31,4 @@ COMMENT ON COLUMN bookings.total_price IS 'Total price for the booking (joiner: 
 
 
 
+

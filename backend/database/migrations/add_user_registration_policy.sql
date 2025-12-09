@@ -26,3 +26,4 @@ CREATE POLICY "Allow public user registration" ON users
 
 
 
+

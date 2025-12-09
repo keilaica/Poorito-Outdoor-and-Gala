@@ -32,3 +32,4 @@ COMMENT ON COLUMN bookings.rejected_at IS 'Timestamp when booking was rejected b
 
 
 
+

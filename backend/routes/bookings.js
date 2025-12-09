@@ -2,7 +2,7 @@ const express = require('express');
 const supabase = require('../config/database');
 const { createUserClient } = require('../config/user-database');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
-const { sendBookingConfirmation } = require('../services/emailService');
+const { sendBookingConfirmation, sendBookingRejection } = require('../services/emailService');
 const { calculateBookingPrices } = require('../utils/pricing');
 const { calculateAvailability, validateBooking } = require('../utils/availability');
 
@@ -752,6 +752,7 @@ router.put('/:id/reject', authenticateToken, requireAdmin, async (req, res) => {
       .eq('id', id)
       .select(`
         id,
+        user_id,
         mountain_id,
         start_date,
         end_date,
@@ -777,6 +778,25 @@ router.put('/:id/reject', authenticateToken, requireAdmin, async (req, res) => {
       return res.status(500).json({ 
         error: 'Failed to reject booking',
         details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+      });
+    }
+
+    // Get user details for email notification
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('id, username, email')
+      .eq('id', updatedBooking.user_id)
+      .single();
+
+    // Send rejection email (non-blocking)
+    if (user && !userError && updatedBooking && updatedBooking.mountains) {
+      sendBookingRejection(
+        user.email,
+        user.username,
+        updatedBooking,
+        updatedBooking.mountains
+      ).catch((emailError) => {
+        console.error('Failed to send booking rejection email:', emailError);
       });
     }
 

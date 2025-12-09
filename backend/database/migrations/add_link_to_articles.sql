@@ -4,3 +4,4 @@ ALTER TABLE articles ADD COLUMN IF NOT EXISTS mountain_name VARCHAR(100);
 
 
 
+
